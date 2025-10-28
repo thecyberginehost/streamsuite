@@ -12,6 +12,7 @@ import { isAdmin } from '@/services/adminService';
 import { useProfile } from '@/hooks/useProfile';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
 import UpgradeDialog from '@/components/UpgradeDialog';
+import { isFeatureEnabled } from '@/services/featureFlagService';
 
 const navigation = [
   {
@@ -76,6 +77,7 @@ const navigation = [
 
 export function Sidebar() {
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showEnterpriseBuilder, setShowEnterpriseBuilder] = useState(false);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [blockedFeature, setBlockedFeature] = useState<{
     name: string;
@@ -88,6 +90,7 @@ export function Sidebar() {
 
   useEffect(() => {
     checkAdminStatus();
+    checkEnterpriseBuilderFlag();
   }, []);
 
   const checkAdminStatus = async () => {
@@ -96,6 +99,17 @@ export function Sidebar() {
       setShowAdmin(adminStatus);
     } catch (error) {
       console.error('Error checking admin status:', error);
+    }
+  };
+
+  const checkEnterpriseBuilderFlag = async () => {
+    try {
+      const isEnabled = await isFeatureEnabled('enterprise_builder');
+      const adminStatus = await isAdmin();
+      // Show if flag is enabled OR if user is admin (for development)
+      setShowEnterpriseBuilder(isEnabled || adminStatus);
+    } catch (error) {
+      console.error('Error checking enterprise builder flag:', error);
     }
   };
 
@@ -178,6 +192,43 @@ export function Sidebar() {
                 )}
               </NavLink>
             ))}
+
+            {/* Enterprise Builder - Conditional based on feature flag */}
+            {showEnterpriseBuilder && (
+              <NavLink
+                to="/enterprise-builder"
+                onClick={(e) => handleNavigationClick(e, {
+                  name: 'Enterprise Builder',
+                  href: '/enterprise-builder',
+                  icon: Building2,
+                  description: 'Complex workflows (20-100+ nodes)',
+                  requiredFeature: 'batch_operations'
+                })}
+                className={({ isActive }) =>
+                  cn(
+                    'group flex items-center gap-2 px-2 py-1.5 text-[13px] font-medium rounded-md transition-colors',
+                    isActive
+                      ? 'bg-gray-100 dark:bg-gray-800/60 text-gray-900 dark:text-gray-100'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200'
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Building2
+                      className={cn(
+                        'h-4 w-4 flex-shrink-0',
+                        isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'
+                      )}
+                    />
+                    <span className="flex-1">Enterprise Builder</span>
+                    <span className="text-[9px] bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded font-medium">
+                      Growth+
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            )}
 
             {/* Admin Link - Only visible to admin users */}
             {showAdmin && (

@@ -25,7 +25,8 @@ export type FeatureFlagKey =
   | 'workflow_generation_make'
   | 'workflow_generation_zapier'
   | 'code_generation_make'
-  | 'code_generation_zapier';
+  | 'code_generation_zapier'
+  | 'enterprise_builder';
 
 // =====================================================
 // FEATURE FLAG QUERIES

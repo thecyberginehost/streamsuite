@@ -5,13 +5,32 @@
  * Organized by generator type (Regular, Batch, Enterprise)
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle2, XCircle, BookOpen, Lightbulb, Shield, Sparkles, Package, Building2 } from 'lucide-react';
+import { isFeatureEnabled } from '@/services/featureFlagService';
+import { isAdmin } from '@/services/adminService';
 
 export default function Docs() {
+  const [showEnterpriseTab, setShowEnterpriseTab] = useState(false);
+
+  useEffect(() => {
+    checkEnterpriseBuilderAccess();
+  }, []);
+
+  const checkEnterpriseBuilderAccess = async () => {
+    try {
+      const flagEnabled = await isFeatureEnabled('enterprise_builder');
+      const adminStatus = await isAdmin();
+      // Show if flag is enabled OR if user is admin
+      setShowEnterpriseTab(flagEnabled || adminStatus);
+    } catch (error) {
+      console.error('Error checking enterprise builder access:', error);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
       {/* Header */}
@@ -27,7 +46,7 @@ export default function Docs() {
 
       {/* Generator Type Tabs */}
       <Tabs defaultValue="regular" className="w-full">
-        <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
+        <TabsList className={`grid w-full max-w-2xl mx-auto ${showEnterpriseTab ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <TabsTrigger value="regular" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">Regular</span>
@@ -36,10 +55,12 @@ export default function Docs() {
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Batch</span>
           </TabsTrigger>
-          <TabsTrigger value="enterprise" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Enterprise</span>
-          </TabsTrigger>
+          {showEnterpriseTab && (
+            <TabsTrigger value="enterprise" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Enterprise</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Regular Generator Tab */}
@@ -52,10 +73,12 @@ export default function Docs() {
           <BatchGeneratorGuide />
         </TabsContent>
 
-        {/* Enterprise Builder Tab */}
-        <TabsContent value="enterprise" className="mt-8 space-y-6">
-          <EnterpriseBuilderGuide />
-        </TabsContent>
+        {/* Enterprise Builder Tab - Only show if feature is enabled or user is admin */}
+        {showEnterpriseTab && (
+          <TabsContent value="enterprise" className="mt-8 space-y-6">
+            <EnterpriseBuilderGuide />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Universal Ethical Guidelines */}
