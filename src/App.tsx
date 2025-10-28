@@ -22,7 +22,6 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import BatchGenerator from "./pages/BatchGenerator";
 import TeamDashboard from "./pages/TeamDashboard";
-import EnterpriseBuilder from "./pages/EnterpriseBuilder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,7 +65,6 @@ const App = () => {
                   <Route path="converter" element={<Converter />} />
                   <Route path="debugger" element={<Debugger />} />
                   <Route path="batch" element={<BatchGenerator />} />
-                  <Route path="enterprise-builder" element={<EnterpriseBuilder />} />
                   <Route path="history" element={<History />} />
                   <Route path="docs" element={<Docs />} />
                   <Route path="settings" element={<Settings />} />

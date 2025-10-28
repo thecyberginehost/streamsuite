@@ -26,7 +26,9 @@
       "Bash(git log:*)",
       "Bash(timeout 5 bash:*)",
       "Bash(supabase status:*)",
-      "Read(//c/Users/Filthy/**)"
+      "Read(//c/Users/Filthy/**)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

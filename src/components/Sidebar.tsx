@@ -36,19 +36,12 @@ const navigation = [
     requiredFeature: 'workflow_debugging'
   },
   {
-    name: 'Enterprise Builder',
-    href: '/enterprise-builder',
-    icon: Building2,
-    description: 'Complex workflows (20-100+ nodes)',
-    requiredFeature: 'batch_operations', // Growth+ only
-    badge: 'Growth+'
-  },
-  {
     name: 'Batch Generator',
     href: '/batch',
     icon: Package,
     description: 'Generate workflow sets',
-    requiredFeature: 'batch_operations'
+    requiredFeature: 'batch_operations',
+    badge: 'Growth+'
   },
   {
     name: 'History',
