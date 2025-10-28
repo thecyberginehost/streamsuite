@@ -23,6 +23,14 @@ const navigation = [
     requiredFeature: 'workflow_generation'
   },
   {
+    name: 'Batch Generator',
+    href: '/batch',
+    icon: Package,
+    description: 'Generate workflow sets',
+    requiredFeature: 'batch_operations',
+    badge: 'Growth+'
+  },
+  {
     name: 'Templates',
     href: '/templates',
     icon: Layers,
@@ -35,14 +43,6 @@ const navigation = [
     icon: Bug,
     description: 'Fix broken workflows',
     requiredFeature: 'workflow_debugging'
-  },
-  {
-    name: 'Batch Generator',
-    href: '/batch',
-    icon: Package,
-    description: 'Generate workflow sets',
-    requiredFeature: 'batch_operations',
-    badge: 'Growth+'
   },
   {
     name: 'History',
