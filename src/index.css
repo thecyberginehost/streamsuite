@@ -1,0 +1,108 @@
+/* FORGE Design System - Development Platform */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Primary Brand Colors */
+    --primary: 233 84% 53%;           /* Deep Blue #2563EB */
+    --primary-foreground: 0 0% 100%;  /* White */
+    --secondary: 158 64% 52%;         /* Emerald Green #059669 */
+    --secondary-foreground: 0 0% 100%; /* White */
+    --accent: 199 89% 48%;            /* Electric Blue #0EA5E9 */
+    --accent-foreground: 0 0% 100%;   /* White */
+    
+    /* Layout Colors */
+    --background: 0 0% 98%;           /* #FAFAFA */
+    --foreground: 233 84% 53%;        /* Deep Blue */
+    --card: 0 0% 100%;               /* White */
+    --card-foreground: 233 84% 53%;   /* Deep Blue */
+    --popover: 0 0% 100%;            /* White */
+    --popover-foreground: 233 84% 53%; /* Deep Blue */
+    
+    /* Utility Colors */
+    --muted: 220 14% 96%;            /* Light Blue-Gray */
+    --muted-foreground: 220 9% 46%;  /* Medium Blue-Gray */
+    --border: 220 13% 91%;           /* Light Border */
+    --input: 220 13% 91%;            /* Light Border */
+    --ring: 233 84% 53%;             /* Deep Blue */
+    --destructive: 0 75% 60%;        /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+    
+    /* Sidebar Colors */
+    --sidebar-background: 233 47% 23%; /* Dark Blue */
+    --sidebar-foreground: 0 0% 100%;   /* White */
+    --sidebar-primary: 199 89% 48%;    /* Electric Blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 158 64% 52%;     /* Emerald Green */
+    --sidebar-accent-foreground: 0 0% 100%; /* White */
+    --sidebar-border: 220 13% 28%;     /* Dark Border */
+    --sidebar-ring: 199 89% 48%;       /* Electric Blue */
+    
+    /* Status Colors */
+    --success: 158 64% 52%;          /* Emerald Green */
+    --warning: 45 93% 58%;           /* Orange */
+    --error: 0 75% 60%;              /* Red */
+
+    --radius: 12px;
+  }
+
+  .dark {
+    /* Primary Brand Colors - Dark Mode */
+    --primary: 270 91% 65%;           /* Purple #7C3AED for dark mode */
+    --primary-foreground: 0 0% 100%;  /* White */
+    --secondary: 158 64% 52%;         /* Emerald Green */
+    --secondary-foreground: 0 0% 100%; /* White */
+    --accent: 199 89% 48%;            /* Electric Blue */
+    --accent-foreground: 0 0% 100%;   /* White */
+    
+    /* Layout Colors - Dark Mode */
+    --background: 233 50% 8%;         /* Very Dark Blue */
+    --foreground: 0 0% 95%;           /* Light Gray */
+    --card: 233 47% 12%;             /* Dark Blue Card */
+    --card-foreground: 0 0% 95%;      /* Light Gray */
+    --popover: 233 47% 12%;          /* Dark Blue */
+    --popover-foreground: 0 0% 95%;   /* Light Gray */
+    
+    /* Utility Colors - Dark Mode */
+    --muted: 233 24% 15%;            /* Dark Blue-Gray */
+    --muted-foreground: 220 9% 65%;  /* Medium Blue-Gray */
+    --border: 233 24% 20%;           /* Dark Border */
+    --input: 233 24% 20%;            /* Dark Border */
+    --ring: 270 91% 65%;             /* Purple */
+    --destructive: 0 75% 60%;        /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+    
+    /* Sidebar Colors - Dark Mode */
+    --sidebar-background: 233 50% 5%; /* Darkest Blue */
+    --sidebar-foreground: 0 0% 95%;   /* Light Gray */
+    --sidebar-primary: 199 89% 48%;   /* Electric Blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 158 64% 52%;    /* Emerald Green */
+    --sidebar-accent-foreground: 0 0% 100%; /* White */
+    --sidebar-border: 233 24% 20%;    /* Dark Border */
+    --sidebar-ring: 199 89% 48%;      /* Electric Blue */
+    
+    /* Status Colors - Dark Mode */
+    --success: 158 64% 62%;          /* Brighter Emerald */
+    --warning: 45 93% 68%;           /* Brighter Orange */
+    --error: 0 75% 65%;              /* Brighter Red */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

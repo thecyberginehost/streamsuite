@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(awk:*)",
+      "Bash(find:*)",
+      "Bash(for file in src/lib/n8n/raw-templates/*.json)",
+      "Bash(done)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(psql:*)",
+      "Bash(npm install:*)",
+      "Bash(for dir in Hubspot Woocommerce Shopify Stripe Pipedrive Salesforce Asana Slack Gmail Notion Airtable)",
+      "Bash(do echo \"=== $dir ===\")",
+      "Bash(for file in /home/thefilthybeard/Desktop/construct03-main/examples/*.json)",
+      "Bash(/dev/null)",
+      "Bash(git log:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(supabase status:*)",
+      "Read(//c/Users/Filthy/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

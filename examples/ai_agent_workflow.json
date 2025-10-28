@@ -1,0 +1,369 @@
+{
+  "name": "AI Agent with Routing Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are an intelligent routing assistant. Based on the user's request, determine the appropriate action: 'email' for sending emails, 'data' for data operations, 'notification' for alerts, or 'general' for other requests. Respond with just the category name."
+      },
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "AI Agent Router",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [
+        550,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        350,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 5
+      },
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1,
+      "position": [
+        350,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "email-route",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "email",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "data-route",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "data",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "notification-route",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "notification",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "fallbackOutput": 3
+      },
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "name": "Route Based on AI Decision",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "to": "user@example.com",
+        "subject": "AI Routed Email",
+        "message": "This email was routed by AI agent based on your request: {{ $json.input }}"
+      },
+      "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1150,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "your-sheet-id",
+        "sheetName": "Sheet1",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "request": "={{ $json.input }}",
+            "ai_decision": "={{ $json.output }}"
+          }
+        }
+      },
+      "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1150,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#general",
+        "text": "AI Agent Alert: {{ $json.input }}\nRouted as: {{ $json.output }}"
+      },
+      "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+      "name": "Send Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1150,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "fields": {
+          "values": [
+            {
+              "name": "response",
+              "type": "string",
+              "stringValue": "Request processed by AI agent: {{ $json.input }}"
+            },
+            {
+              "name": "category",
+              "type": "string",
+              "stringValue": "{{ $json.output }}"
+            },
+            {
+              "name": "timestamp",
+              "type": "string",
+              "stringValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+      "name": "General Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1150,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "fields": {
+          "values": [
+            {
+              "name": "workflow_status",
+              "type": "string",
+              "stringValue": "completed"
+            },
+            {
+              "name": "completion_time",
+              "type": "string",
+              "stringValue": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "action_taken",
+              "type": "string",
+              "stringValue": "{{ $('Route Based on AI Decision').item.json.output || 'unknown' }}"
+            },
+            {
+              "name": "original_request",
+              "type": "string",
+              "stringValue": "{{ $('AI Agent Router').item.json.input || 'no input provided' }}"
+            }
+          ]
+        }
+      },
+      "id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "name": "Workflow Complete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        325
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Router",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Router",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Router": {
+      "main": [
+        [
+          {
+            "node": "Route Based on AI Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Based on AI Decision": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Workflow Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Workflow Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Slack Notification": {
+      "main": [
+        [
+          {
+            "node": "Workflow Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "General Response": {
+      "main": [
+        [
+          {
+            "node": "Workflow Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCreatedBy": "StreamSuite AI Debugger",
+    "fixesApplied": [
+      "Added 'Workflow Complete' node to merge all 4 switch routes back together",
+      "Connected all dead-end nodes (Send Email, Log to Google Sheets, Send Slack Notification, General Response) to the completion node",
+      "Fixed workflow structure to have single completion point instead of 4 terminal nodes",
+      "Added workflow status tracking with original request and AI decision in completion node",
+      "Positioned completion node at [1450, 325] to center it relative to all incoming routes"
+    ]
+  }
+}
