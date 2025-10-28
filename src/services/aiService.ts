@@ -591,23 +591,10 @@ export async function generateWorkflow(
     const workflowJson = parseWorkflowResponse(response);
     validateWorkflow(workflowJson, request.platform);
 
-    // Calculate credits based on actual token usage (Tiered System)
-    // Tier 1: < 2000 tokens = 1 credit (~$0.03 cost, simple workflow)
-    // Tier 2: 2000-4999 tokens = 2 credits (~$0.06 cost, medium workflow)
-    // Tier 3: 5000-9999 tokens = 3 credits (~$0.12 cost, complex workflow)
-    // Tier 4: 10000+ tokens = 5 credits (~$0.20+ cost, very complex workflow)
+    // Always deduct exactly 1 credit for regular workflow generation
+    // Simplified flat-rate pricing for better UX
     const totalTokens = response.usage.input_tokens + response.usage.output_tokens;
-    let creditsUsed: number;
-
-    if (totalTokens < 2000) {
-      creditsUsed = 1;
-    } else if (totalTokens < 5000) {
-      creditsUsed = 2;
-    } else if (totalTokens < 10000) {
-      creditsUsed = 3;
-    } else {
-      creditsUsed = 5;
-    }
+    const creditsUsed = 1;
 
     return {
       workflow: workflowJson,
