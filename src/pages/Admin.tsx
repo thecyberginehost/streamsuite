@@ -62,6 +62,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
+import UserAuditLog from '@/components/admin/UserAuditLog';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ export default function Admin() {
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [showCreditsDialog, setShowCreditsDialog] = useState(false);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [showAuditLogDialog, setShowAuditLogDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'growth' | 'agency'>('free');
   const [creditAmount, setCreditAmount] = useState('');
   const [creditType, setCreditType] = useState<'regular' | 'bonus'>('regular');
@@ -520,6 +522,17 @@ export default function Admin() {
                     >
                       Activity
                     </Button>
+                    <Button
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowAuditLogDialog(true);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                    >
+                      🔍 Audit Log
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -712,6 +725,28 @@ export default function Admin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowActivityDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Audit Log Dialog */}
+      <Dialog open={showAuditLogDialog} onOpenChange={setShowAuditLogDialog}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>User Audit Log & Security Monitoring</DialogTitle>
+            <DialogDescription>
+              Complete activity history, threat detection, and security incidents for {selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+            {selectedUser && (
+              <UserAuditLog userId={selectedUser.id} userEmail={selectedUser.email} />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAuditLogDialog(false)}>
               Close
             </Button>
           </DialogFooter>

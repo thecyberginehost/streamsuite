@@ -38,20 +38,37 @@ export interface UserActivity {
  */
 export async function isAdmin(): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (error) {
-    console.error('Error checking admin status:', error);
+  if (!user) {
+    console.log('[isAdmin] No user logged in');
     return false;
   }
 
-  return data?.is_admin || false;
+  console.log('[isAdmin] Checking admin status for user:', user.id);
+
+  // Use RPC function to bypass RLS and check admin status
+  const { data, error } = await supabase
+    .rpc('is_user_admin', { user_id: user.id });
+
+  if (error) {
+    console.error('[isAdmin] RPC error:', error);
+    // Fallback to direct query (works if RLS allows viewing own profile)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('[isAdmin] Profile query error:', profileError);
+      return false;
+    }
+
+    console.log('[isAdmin] Fallback profile result:', profile);
+    return profile?.is_admin || false;
+  }
+
+  console.log('[isAdmin] RPC result:', data);
+  return data || false;
 }
 
 /**

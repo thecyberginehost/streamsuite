@@ -28,7 +28,11 @@
       "Bash(supabase status:*)",
       "Read(//c/Users/Filthy/**)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(supabase --version:*)",
+      "Bash(npx supabase:*)",
+      "Bash(set:*)",
+      "Bash(export SUPABASE_ACCESS_TOKEN=sbp_1c4730dfc9f202c97a4728d523445d7cd3a65baa)"
     ],
     "deny": [],
     "ask": []

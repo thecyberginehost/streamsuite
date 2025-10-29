@@ -26,6 +26,8 @@ import {
 } from '@/services/creditService';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
 import UpgradeCTA from '@/components/UpgradeCTA';
+import { sanitizeWorkflowJson } from '@/utils/jsonSanitizer';
+import { logFileUpload, logBlocked, logSuccess, logFailure } from '@/services/auditService';
 
 export default function Debugger() {
   const [workflowJson, setWorkflowJson] = useState('');
@@ -48,12 +50,13 @@ export default function Debugger() {
   }, [debugResult]);
 
   /**
-   * Handle file upload
+   * Handle file upload with security sanitization
    */
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file extension
     if (!file.name.endsWith('.json')) {
       toast({
         title: 'Invalid file type',
@@ -64,21 +67,80 @@ export default function Debugger() {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const content = event.target?.result as string;
-        // Validate JSON
-        JSON.parse(content);
-        setWorkflowJson(content);
-        toast({
-          title: 'File loaded!',
-          description: 'Workflow JSON has been loaded successfully.'
+
+        // 🛡️ SECURITY: Sanitize and validate JSON
+        const sanitizationResult = sanitizeWorkflowJson(content);
+
+        // Log the file upload attempt
+        await logFileUpload(file.name, file.size, sanitizationResult);
+
+        if (!sanitizationResult.valid) {
+          // 🚨 BLOCKED: Malicious or invalid file
+          toast({
+            title: '🚫 File Blocked',
+            description: sanitizationResult.error || 'Invalid workflow file',
+            variant: 'destructive',
+            duration: 8000
+          });
+
+          // Log the blocked attempt with threat details
+          if (sanitizationResult.threat) {
+            await logBlocked('file_upload', sanitizationResult.threat, {
+              file_name: file.name,
+              file_size: file.size
+            });
+
+            // Show security warning for high/critical threats
+            if (sanitizationResult.threat.severity === 'high' || sanitizationResult.threat.severity === 'critical') {
+              toast({
+                title: '⚠️ Security Alert',
+                description: 'This action has been logged. Repeated malicious attempts may result in account suspension.',
+                variant: 'destructive',
+                duration: 10000
+              });
+            }
+          }
+
+          return;
+        }
+
+        // ✅ SUCCESS: File is safe, use sanitized version
+        setWorkflowJson(JSON.stringify(sanitizationResult.sanitized, null, 2));
+
+        // Show warnings if any
+        if (sanitizationResult.warnings && sanitizationResult.warnings.length > 0) {
+          toast({
+            title: '⚠️ File loaded with warnings',
+            description: sanitizationResult.warnings.join('. '),
+            duration: 6000
+          });
+        } else {
+          toast({
+            title: '✅ File loaded safely',
+            description: 'Workflow JSON has been sanitized and loaded successfully.'
+          });
+        }
+
+        // Log successful upload
+        await logSuccess('file_upload', {
+          file_name: file.name,
+          file_size: file.size,
+          has_warnings: (sanitizationResult.warnings?.length || 0) > 0
         });
+
       } catch (error) {
         toast({
-          title: 'Invalid JSON',
-          description: 'The file contains invalid JSON. Please check the format.',
+          title: 'Upload failed',
+          description: 'Could not read the file. Please try again.',
           variant: 'destructive'
+        });
+
+        await logFailure('file_upload', 'File read error', {
+          file_name: file.name,
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
     };
