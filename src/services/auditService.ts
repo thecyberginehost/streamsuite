@@ -338,6 +338,71 @@ export async function getUserAuditLogs(
 }
 
 /**
+ * Export user audit logs as CSV (admin only)
+ */
+export async function exportAuditLogsCSV(userId: string, userEmail: string): Promise<void> {
+  try {
+    // Fetch all logs for user
+    const logs = await getUserAuditLogs(userId, 1000);
+
+    if (logs.length === 0) {
+      throw new Error('No audit logs found for this user');
+    }
+
+    // Build CSV content
+    const headers = [
+      'Event ID',
+      'Timestamp',
+      'Action Type',
+      'Status',
+      'Credits Used',
+      'IP Address',
+      'Location',
+      'User Agent',
+      'Threat Detected',
+      'Threat Type',
+      'Threat Severity',
+      'Details'
+    ];
+
+    const rows = logs.map(log => [
+      log.event_id || 'N/A',
+      new Date(log.created_at).toISOString(),
+      log.action_type,
+      log.action_status,
+      log.credits_used || 0,
+      log.ip_address || 'N/A',
+      log.geolocation ? `${log.geolocation.city}, ${log.geolocation.country}` : 'N/A',
+      log.user_agent || 'N/A',
+      log.threat_detected ? 'Yes' : 'No',
+      log.threat_type || 'N/A',
+      log.threat_severity || 'N/A',
+      JSON.stringify(log.action_details || {})
+    ]);
+
+    // Convert to CSV format
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Create and download blob
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `audit-log-${userEmail.replace('@', '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('[AuditService] Failed to export CSV:', error);
+    throw error;
+  }
+}
+
+/**
  * Get user's activity summary (admin only)
  */
 export async function getUserActivitySummary(userId: string): Promise<UserActivitySummary | null> {

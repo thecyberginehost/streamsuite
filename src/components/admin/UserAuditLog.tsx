@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import {
   AlertTriangle,
   CheckCircle,
@@ -18,18 +20,24 @@ import {
   MapPin,
   Monitor,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Download,
+  BookOpen,
+  Globe
 } from 'lucide-react';
 import {
   getUserAuditLogs,
   getUserActivitySummary,
   getUserThreatScore,
   getUserSecurityIncidents,
+  exportAuditLogsCSV,
   formatActionType,
   formatThreatSeverity,
   type UserActivitySummary,
   type SecurityIncident
 } from '@/services/auditService';
+import EventCodeLegend from './EventCodeLegend';
+import { getEventCode } from '@/lib/eventCodes';
 
 interface UserAuditLogProps {
   userId: string;
@@ -44,6 +52,8 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
   const [loading, setLoading] = useState(true);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [showOnlyThreats, setShowOnlyThreats] = useState(false);
+  const [showLegendDialog, setShowLegendDialog] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadUserData();
@@ -76,6 +86,22 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
     ? logs.filter(log => log.threat_detected)
     : logs;
 
+  const handleExportCSV = async () => {
+    try {
+      await exportAuditLogsCSV(userId, userEmail);
+      toast({
+        title: 'Export successful',
+        description: 'Audit logs have been downloaded as CSV'
+      });
+    } catch (error) {
+      toast({
+        title: 'Export failed',
+        description: error instanceof Error ? error.message : 'Failed to export logs',
+        variant: 'destructive'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card className="p-8">
@@ -94,12 +120,30 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
           <h2 className="text-2xl font-bold">Audit Log</h2>
           <p className="text-muted-foreground">{userEmail}</p>
         </div>
-        <Badge
-          variant={threatScore > 50 ? 'destructive' : threatScore > 20 ? 'default' : 'secondary'}
-          className="text-lg py-2 px-4"
-        >
-          Threat Score: {threatScore}/100
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowLegendDialog(true)}
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Event Legend
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Badge
+            variant={threatScore > 50 ? 'destructive' : threatScore > 20 ? 'default' : 'secondary'}
+            className="text-lg py-2 px-4"
+          >
+            Threat Score: {threatScore}/100
+          </Badge>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -224,8 +268,13 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
 
                     <div className="flex-1">
                       {/* Action Type */}
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-medium">{formatActionType(log.action_type)}</p>
+                        {log.event_id && (
+                          <Badge variant="outline" className="text-xs font-mono">
+                            {log.event_id}
+                          </Badge>
+                        )}
                         {log.threat_detected && (
                           <Badge variant="destructive" className="text-xs">
                             {formatThreatSeverity(log.threat_severity).icon}{' '}
@@ -235,7 +284,7 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
                       </div>
 
                       {/* Metadata */}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {new Date(log.created_at).toLocaleString()}
@@ -244,6 +293,11 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {log.ip_address}
+                            {log.geolocation && (
+                              <span className="text-xs">
+                                ({log.geolocation.city}, {log.geolocation.country})
+                              </span>
+                            )}
                           </span>
                         )}
                         {log.credits_used > 0 && (
@@ -315,6 +369,19 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
           </div>
         </ScrollArea>
       </Card>
+
+      {/* Event Code Legend Dialog */}
+      <Dialog open={showLegendDialog} onOpenChange={setShowLegendDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Event Code Legend</DialogTitle>
+            <DialogDescription>
+              Reference guide for all event codes and their meanings
+            </DialogDescription>
+          </DialogHeader>
+          <EventCodeLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
