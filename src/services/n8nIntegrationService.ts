@@ -177,6 +177,12 @@ export async function pushWorkflowToN8n(
   workflowJson: any
 ): Promise<PushedWorkflow> {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
     // Push workflow via Edge Function proxy
     const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
       body: {
@@ -203,6 +209,7 @@ export async function pushWorkflowToN8n(
     const { data, error } = await supabase
       .from('pushed_workflows')
       .insert({
+        user_id: user.id,
         connection_id: connectionId,
         workflow_name: workflowName,
         workflow_id: n8nWorkflow.id || n8nWorkflow.data?.id,
@@ -219,10 +226,14 @@ export async function pushWorkflowToN8n(
 
     return data;
   } catch (error) {
+    // Get current user for failed attempt
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Save failed attempt
     const { data } = await supabase
       .from('pushed_workflows')
       .insert({
+        user_id: user?.id,
         connection_id: connectionId,
         workflow_name: workflowName,
         workflow_json: workflowJson,
