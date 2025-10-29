@@ -42,7 +42,7 @@ import { canAccessFeature } from '@/config/subscriptionPlans';
 import {
   testN8nConnection,
   saveN8nConnection,
-  getUserConnections,
+  getN8nConnections,
   deleteN8nConnection,
   type N8nConnection
 } from '@/services/n8nIntegrationService';
@@ -75,7 +75,7 @@ export default function Settings() {
   const loadConnections = async () => {
     try {
       setLoading(true);
-      const data = await getUserConnections();
+      const data = await getN8nConnections();
       setConnections(data);
     } catch (error: any) {
       console.error('Failed to load connections:', error);
