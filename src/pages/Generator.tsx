@@ -157,14 +157,32 @@ export default function GeneratorNew() {
           full_prompt: prompt,
           validation_reason: validation.reason
         });
-      }
 
-      toast({
-        title: validation.category === 'unethical' ? '🚫 Request Blocked' : '❌ Not a Workflow Request',
-        description: validation.reason,
-        variant: 'destructive',
-        duration: 10000
-      });
+        // Show security incident warning
+        toast({
+          title: '🚨 Security Incident Reported',
+          description: 'Your action has been reported to the Cyber Incident Response Team for immediate review. Your IP address, location, and full request details have been logged.',
+          variant: 'destructive',
+          duration: 15000
+        });
+
+        // Show technical error after delay
+        setTimeout(() => {
+          toast({
+            title: validation.category === 'unethical' ? '🚫 Request Blocked' : '❌ Security Threat Detected',
+            description: validation.reason + '\n\nRepeated malicious attempts may result in account suspension.',
+            variant: 'destructive',
+            duration: 10000
+          });
+        }, 1500);
+      } else {
+        toast({
+          title: validation.category === 'unethical' ? '🚫 Request Blocked' : '❌ Not a Workflow Request',
+          description: validation.reason,
+          variant: 'destructive',
+          duration: 10000
+        });
+      }
       return;
     }
 
