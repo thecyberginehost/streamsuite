@@ -46,7 +46,7 @@ const NON_WORKFLOW_KEYWORDS = [
 ];
 
 /**
- * Security patterns (XSS, injection attempts)
+ * Security patterns (XSS, SQL injection, IDOR, and other attacks)
  */
 const SECURITY_PATTERNS = [
   // XSS attempts
@@ -57,8 +57,56 @@ const SECURITY_PATTERNS = [
   { pattern: /<img[\s\S]*?onerror/i, reason: 'XSS attack detected: Malicious image tags are not allowed', severity: 'critical' },
   { pattern: /eval\s*\(/i, reason: 'Code injection detected: eval() is not allowed', severity: 'high' },
   { pattern: /expression\s*\(/i, reason: 'Code injection detected: CSS expression() is not allowed', severity: 'high' },
+  { pattern: /document\.cookie|document\.write/i, reason: 'XSS attack detected: Cookie/DOM manipulation attempt', severity: 'critical' },
+  { pattern: /<object|<embed|<applet/i, reason: 'XSS attack detected: Dangerous HTML tags', severity: 'critical' },
 
-  // Prompt injection attempts
+  // SQL Injection attempts
+  { pattern: /'\s*(or|and)\s*'?\d*'?\s*=\s*'?\d/i, reason: 'SQL injection detected: OR/AND equality attack', severity: 'critical' },
+  { pattern: /union\s+select/i, reason: 'SQL injection detected: UNION SELECT attack', severity: 'critical' },
+  { pattern: /;\s*(drop|delete|truncate|alter)\s+(table|database)/i, reason: 'SQL injection detected: Destructive SQL command', severity: 'critical' },
+  { pattern: /exec\s*\(|execute\s*\(/i, reason: 'SQL injection detected: Command execution attempt', severity: 'critical' },
+  { pattern: /xp_cmdshell|sp_executesql/i, reason: 'SQL injection detected: Stored procedure attack', severity: 'critical' },
+  { pattern: /';\s*--/i, reason: 'SQL injection detected: Comment-based injection', severity: 'critical' },
+  { pattern: /\*\s*from\s+\w+\s*--/i, reason: 'SQL injection detected: SELECT * comment attack', severity: 'critical' },
+  { pattern: /waitfor\s+delay|sleep\s*\(/i, reason: 'SQL injection detected: Time-based blind SQLi', severity: 'high' },
+
+  // IDOR (Insecure Direct Object Reference) attempts
+  { pattern: /\/api\/users?\/\d+\/sensitive/i, reason: 'IDOR attack detected: Direct user data access attempt', severity: 'high' },
+  { pattern: /user_?id\s*=\s*\d+.*admin/i, reason: 'IDOR attack detected: Privilege escalation attempt', severity: 'critical' },
+  { pattern: /\.\.\/|\.\.\\|%2e%2e/i, reason: 'Path traversal attack detected', severity: 'critical' },
+  { pattern: /\/etc\/passwd|\/windows\/system32/i, reason: 'Path traversal attack detected: System file access', severity: 'critical' },
+  { pattern: /\/admin|\/root|\/api\/admin/i, reason: 'IDOR attack detected: Administrative endpoint access', severity: 'high' },
+
+  // Command Injection attempts
+  { pattern: /\|.*?(ls|cat|wget|curl|bash|sh|cmd)/i, reason: 'Command injection detected: Shell command in input', severity: 'critical' },
+  { pattern: /`[\w\s]+`|$\([\w\s]+\)/i, reason: 'Command injection detected: Command substitution', severity: 'critical' },
+  { pattern: /&\s*(ls|cat|wget|curl|rm|del)/i, reason: 'Command injection detected: Command chaining', severity: 'critical' },
+  { pattern: /\$\{.*?\}|\$\(.*?\)/i, reason: 'Command injection detected: Variable interpolation attack', severity: 'high' },
+
+  // NoSQL Injection attempts
+  { pattern: /\$where|\$regex|\$ne:\s*null/i, reason: 'NoSQL injection detected: MongoDB operator abuse', severity: 'critical' },
+  { pattern: /\{\s*"\$gt"\s*:\s*""/i, reason: 'NoSQL injection detected: Greater-than bypass', severity: 'critical' },
+
+  // LDAP Injection attempts
+  { pattern: /\*\)\(|\)\(|\(\|/i, reason: 'LDAP injection detected: Filter manipulation', severity: 'high' },
+
+  // XML/XXE attempts
+  { pattern: /<!entity|<!doctype.*system/i, reason: 'XXE attack detected: External entity injection', severity: 'critical' },
+  { pattern: /<\?xml.*?>/i, reason: 'XML injection detected: Potentially malicious XML', severity: 'medium' },
+
+  // SSRF (Server-Side Request Forgery) attempts
+  { pattern: /localhost|127\.0\.0\.1|0\.0\.0\.0/i, reason: 'SSRF attack detected: Local network access attempt', severity: 'critical' },
+  { pattern: /169\.254\.169\.254/i, reason: 'SSRF attack detected: Cloud metadata access attempt (AWS/Azure)', severity: 'critical' },
+  { pattern: /file:\/\/|ftp:\/\/|gopher:\/\//i, reason: 'SSRF attack detected: Dangerous protocol usage', severity: 'critical' },
+
+  // Template Injection attempts
+  { pattern: /\{\{.*?\}\}|\{%.*?%\}/i, reason: 'Template injection detected: SSTI attempt', severity: 'high' },
+  { pattern: /\$\{.*?config.*?\}/i, reason: 'Template injection detected: Config access attempt', severity: 'critical' },
+
+  // Prototype Pollution attempts
+  { pattern: /__proto__|constructor\[["']prototype["']\]/i, reason: 'Prototype pollution detected: Object manipulation', severity: 'critical' },
+
+  // Prompt injection attempts (AI-specific)
   { pattern: /ignore\s+(all\s+)?previous\s+instructions/i, reason: 'Prompt injection attempt detected', severity: 'high' },
   { pattern: /disregard\s+(all\s+)?prior\s+(instructions|prompts)/i, reason: 'Prompt injection attempt detected', severity: 'high' },
   { pattern: /you\s+are\s+now\s+(a|an)\s+\w+/i, reason: 'Prompt injection attempt detected: Role override', severity: 'high' },
