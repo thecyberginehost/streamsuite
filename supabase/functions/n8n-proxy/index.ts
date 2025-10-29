@@ -96,6 +96,18 @@ serve(async (req) => {
         break;
       }
 
+      case 'listWorkflows': {
+        // List all workflows in n8n instance (for Growth plan monitoring)
+        n8nResponse = await fetch(`${instance_url}/api/v1/workflows`, {
+          method: 'GET',
+          headers: {
+            'X-N8N-API-KEY': api_key,
+            'Accept': 'application/json',
+          },
+        });
+        break;
+      }
+
       case 'push': {
         // Push workflow to n8n
         const { workflowName, workflowJson } = data;

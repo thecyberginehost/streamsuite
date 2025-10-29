@@ -248,7 +248,35 @@ export async function pushWorkflowToN8n(
 }
 
 /**
- * Get pushed workflows for current user
+ * Get all workflows from n8n instance (Growth plan feature)
+ */
+export async function getAllWorkflowsFromN8n(connectionId: string): Promise<any[]> {
+  try {
+    const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        action: 'listWorkflows',
+        connectionId: connectionId,
+        data: {}
+      }
+    });
+
+    if (proxyError) {
+      throw new Error(proxyError.message || 'Failed to fetch workflows from n8n');
+    }
+
+    if (!proxyResponse.success) {
+      throw new Error(proxyResponse.error || 'Failed to fetch workflows from n8n');
+    }
+
+    return proxyResponse.data?.data || [];
+  } catch (error) {
+    console.error('Error fetching workflows from n8n:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get pushed workflows for current user (from StreamSuite database)
  */
 export async function getPushedWorkflows(connectionId?: string): Promise<PushedWorkflow[]> {
   let query = supabase
