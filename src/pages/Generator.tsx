@@ -37,7 +37,7 @@ import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans'
 import UpgradeCTA from '@/components/UpgradeCTA';
 import UpgradeDialog from '@/components/UpgradeDialog';
 import { Coins } from 'lucide-react';
-import { logSuccess, logFailure } from '@/services/auditService';
+import { logSuccess, logFailure, logBlocked } from '@/services/auditService';
 
 export default function GeneratorNew() {
   // State management
@@ -142,6 +142,23 @@ export default function GeneratorNew() {
     // Validate prompt
     const validation = validatePrompt(prompt);
     if (!validation.isValid) {
+      // 🚨 LOG BLOCKED ATTEMPT: Security threat or unethical request
+      const isSecurityThreat = validation.reason?.includes('XSS') ||
+                               validation.reason?.includes('injection') ||
+                               validation.reason?.includes('🚨');
+
+      if (isSecurityThreat) {
+        await logBlocked('workflow_generation', {
+          type: validation.reason?.includes('XSS') ? 'xss' : 'injection',
+          severity: 'critical'
+        }, {
+          platform,
+          prompt: prompt.substring(0, 100),
+          full_prompt: prompt,
+          validation_reason: validation.reason
+        });
+      }
+
       toast({
         title: validation.category === 'unethical' ? '🚫 Request Blocked' : '❌ Not a Workflow Request',
         description: validation.reason,

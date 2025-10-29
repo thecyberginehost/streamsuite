@@ -46,6 +46,28 @@ const NON_WORKFLOW_KEYWORDS = [
 ];
 
 /**
+ * Security patterns (XSS, injection attempts)
+ */
+const SECURITY_PATTERNS = [
+  // XSS attempts
+  { pattern: /<script[\s\S]*?>/i, reason: 'XSS attack detected: Script tags are not allowed', severity: 'critical' },
+  { pattern: /<iframe[\s\S]*?>/i, reason: 'XSS attack detected: Iframe tags are not allowed', severity: 'critical' },
+  { pattern: /javascript:/i, reason: 'XSS attack detected: JavaScript URLs are not allowed', severity: 'critical' },
+  { pattern: /on\w+\s*=\s*["'][^"']*["']/i, reason: 'XSS attack detected: Event handlers are not allowed', severity: 'critical' },
+  { pattern: /<img[\s\S]*?onerror/i, reason: 'XSS attack detected: Malicious image tags are not allowed', severity: 'critical' },
+  { pattern: /eval\s*\(/i, reason: 'Code injection detected: eval() is not allowed', severity: 'high' },
+  { pattern: /expression\s*\(/i, reason: 'Code injection detected: CSS expression() is not allowed', severity: 'high' },
+
+  // Prompt injection attempts
+  { pattern: /ignore\s+(all\s+)?previous\s+instructions/i, reason: 'Prompt injection attempt detected', severity: 'high' },
+  { pattern: /disregard\s+(all\s+)?prior\s+(instructions|prompts)/i, reason: 'Prompt injection attempt detected', severity: 'high' },
+  { pattern: /you\s+are\s+now\s+(a|an)\s+\w+/i, reason: 'Prompt injection attempt detected: Role override', severity: 'high' },
+  { pattern: /forget\s+everything/i, reason: 'Prompt injection attempt detected', severity: 'high' },
+  { pattern: /new\s+instructions?:/i, reason: 'Prompt injection attempt detected', severity: 'high' },
+  { pattern: /system\s+prompt|reveal\s+your\s+prompt/i, reason: 'Prompt extraction attempt detected', severity: 'medium' }
+];
+
+/**
  * Unethical/illegal activities that should be rejected
  */
 const UNETHICAL_PATTERNS = [
@@ -128,19 +150,25 @@ export function validatePrompt(prompt: string): ValidationResult {
     };
   }
 
-  // 2. Check for unethical/illegal content
+  // 2. Check for security threats (XSS, injection) - HIGHEST PRIORITY
+  const securityCheck = checkSecurityThreats(prompt); // Use original case for pattern matching
+  if (!securityCheck.isValid) {
+    return securityCheck;
+  }
+
+  // 3. Check for unethical/illegal content
   const ethicalCheck = checkEthicalViolations(lowerPrompt);
   if (!ethicalCheck.isValid) {
     return ethicalCheck;
   }
 
-  // 3. Check if it's actually a workflow request
+  // 4. Check if it's actually a workflow request
   const workflowCheck = checkIsWorkflowRequest(lowerPrompt);
   if (!workflowCheck.isValid) {
     return workflowCheck;
   }
 
-  // 4. Check specificity
+  // 5. Check specificity
   const specificityCheck = checkSpecificity(lowerPrompt);
   if (!specificityCheck.isValid) {
     return specificityCheck;
@@ -152,6 +180,25 @@ export function validatePrompt(prompt: string): ValidationResult {
     category: 'valid',
     reason: 'Valid workflow request'
   };
+}
+
+/**
+ * Check for security threats (XSS, injection attempts)
+ */
+function checkSecurityThreats(prompt: string): ValidationResult {
+  for (const { pattern, reason, severity } of SECURITY_PATTERNS) {
+    if (pattern.test(prompt)) {
+      console.warn('[PromptValidator] Security threat detected:', { reason, severity, prompt: prompt.substring(0, 50) });
+      return {
+        isValid: false,
+        category: 'unethical', // Use 'unethical' to trigger blocking behavior
+        reason: `🚨 ${reason}`,
+        suggestion: 'This action has been logged. Repeated malicious attempts may result in account suspension.'
+      };
+    }
+  }
+
+  return { isValid: true, category: 'valid' };
 }
 
 /**
