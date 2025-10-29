@@ -58,6 +58,12 @@ const navigation = [
     description: 'How to write great prompts',
     requiredFeature: 'workflow_generation' // Available to all
   },
+  {
+    name: 'Settings',
+    href: '/settings',
+    icon: Settings,
+    description: 'n8n connections & account settings',
+  },
   // Future features (v2)
   // {
   //   name: 'Converter',
@@ -66,13 +72,6 @@ const navigation = [
   //   description: 'Convert between platforms',
   //   comingSoon: true
   // },
-  // {
-  //   name: 'Settings',
-  //   href: '/settings',
-  //   icon: Settings,
-  //   description: 'Account settings',
-  //   comingSoon: true
-  // }
 ];
 
 export function Sidebar() {
