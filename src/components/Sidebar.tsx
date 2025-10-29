@@ -45,6 +45,14 @@ const navigation = [
     requiredFeature: 'workflow_debugging'
   },
   {
+    name: 'Monitoring',
+    href: '/monitoring',
+    icon: Zap,
+    description: 'Monitor n8n workflows',
+    requiredFeature: 'n8n_push',
+    badge: 'Pro+'
+  },
+  {
     name: 'History',
     href: '/history',
     icon: History,
