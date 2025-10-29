@@ -334,6 +334,76 @@ export async function monitorWorkflow(pushedWorkflowId: string): Promise<PushedW
 }
 
 /**
+ * Get workflow executions from n8n (Growth plan feature - MVP)
+ * Simple list of last 20 executions
+ */
+export async function getWorkflowExecutions(
+  connectionId: string,
+  workflowId: string,
+  limit = 20
+): Promise<any[]> {
+  try {
+    // Get connection details via Edge Function proxy
+    const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        action: 'getExecutions',
+        connectionId: connectionId,
+        data: {
+          workflowId,
+          limit
+        }
+      }
+    });
+
+    if (proxyError) {
+      throw new Error(proxyError.message || 'Failed to fetch executions');
+    }
+
+    if (!proxyResponse.success) {
+      throw new Error(proxyResponse.error || 'Failed to fetch executions');
+    }
+
+    return proxyResponse.data?.data || [];
+  } catch (error) {
+    console.error('Error fetching executions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Retry a failed execution (Growth plan feature - MVP)
+ */
+export async function retryExecution(
+  connectionId: string,
+  executionId: string
+): Promise<any> {
+  try {
+    const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        action: 'retryExecution',
+        connectionId: connectionId,
+        data: {
+          executionId
+        }
+      }
+    });
+
+    if (proxyError) {
+      throw new Error(proxyError.message || 'Failed to retry execution');
+    }
+
+    if (!proxyResponse.success) {
+      throw new Error(proxyResponse.error || 'Failed to retry execution');
+    }
+
+    return proxyResponse.data;
+  } catch (error) {
+    console.error('Error retrying execution:', error);
+    throw error;
+  }
+}
+
+/**
  * Activate/deactivate workflow in n8n
  */
 export async function toggleWorkflowActive(

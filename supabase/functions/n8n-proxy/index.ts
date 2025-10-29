@@ -115,6 +115,38 @@ serve(async (req) => {
         break;
       }
 
+      case 'getExecutions': {
+        // Get workflow executions (MVP - simple list)
+        const { workflowId, limit = 20 } = data;
+        n8nResponse = await fetch(
+          `${instance_url}/api/v1/executions?workflowId=${workflowId}&limit=${limit}`,
+          {
+            method: 'GET',
+            headers: {
+              'X-N8N-API-KEY': api_key,
+              'Accept': 'application/json',
+            },
+          }
+        );
+        break;
+      }
+
+      case 'retryExecution': {
+        // Retry a failed execution (MVP)
+        const { executionId } = data;
+        n8nResponse = await fetch(
+          `${instance_url}/api/v1/executions/${executionId}/retry`,
+          {
+            method: 'POST',
+            headers: {
+              'X-N8N-API-KEY': api_key,
+              'Accept': 'application/json',
+            },
+          }
+        );
+        break;
+      }
+
       case 'toggleActive': {
         // Activate/deactivate workflow
         const { workflowId, active } = data;
