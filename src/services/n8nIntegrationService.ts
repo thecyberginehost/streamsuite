@@ -104,9 +104,17 @@ export async function saveN8nConnection(
   instanceUrl: string,
   apiKey: string
 ): Promise<N8nConnection> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const { data, error } = await supabase
     .from('n8n_connections')
     .insert({
+      user_id: user.id,
       connection_name: connectionName,
       instance_url: instanceUrl.replace(/\/$/, ''),
       api_key: apiKey,
