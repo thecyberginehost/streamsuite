@@ -23,6 +23,23 @@ serve(async (req) => {
     // Get request body
     const { action, connectionId, data } = await req.json();
 
+    console.log('n8n-proxy request:', { action, connectionId, data });
+
+    // Validate request
+    if (!action) {
+      return new Response(
+        JSON.stringify({ error: 'Missing action parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!connectionId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing connectionId parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -82,19 +99,21 @@ serve(async (req) => {
       case 'push': {
         // Push workflow to n8n
         const { workflowName, workflowJson } = data;
+        const pushBody = {
+          name: workflowName,
+          nodes: workflowJson.nodes,
+          connections: workflowJson.connections,
+          settings: workflowJson.settings || {},
+          staticData: workflowJson.staticData || null,
+        };
+        console.log('Pushing workflow to n8n:', workflowName);
         n8nResponse = await fetch(`${instance_url}/api/v1/workflows`, {
           method: 'POST',
           headers: {
             'X-N8N-API-KEY': api_key,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: workflowName,
-            nodes: workflowJson.nodes,
-            connections: workflowJson.connections,
-            settings: workflowJson.settings || {},
-            staticData: workflowJson.staticData || null,
-          }),
+          body: JSON.stringify(pushBody),
         });
         break;
       }
@@ -118,6 +137,18 @@ serve(async (req) => {
       case 'getExecutions': {
         // Get workflow executions (MVP - simple list)
         const { workflowId, limit = 20 } = data;
+
+        if (!workflowId) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Missing workflowId parameter',
+              details: 'The workflow may not have been pushed successfully or the workflow_id was not saved.'
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         n8nResponse = await fetch(
           `${instance_url}/api/v1/executions?workflowId=${workflowId}&limit=${limit}`,
           {
@@ -177,6 +208,9 @@ serve(async (req) => {
     } catch {
       responseData = { raw: responseText };
     }
+
+    // Log response for debugging
+    console.log('n8n API response:', { status: n8nResponse.status, action, data: responseData });
 
     // Return response
     if (!n8nResponse.ok) {
