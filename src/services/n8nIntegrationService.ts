@@ -251,7 +251,13 @@ export async function pushWorkflowToN8n(
  * Get all workflows from n8n instance (Growth plan feature)
  */
 export async function getAllWorkflowsFromN8n(connectionId: string): Promise<any[]> {
+  if (!connectionId) {
+    throw new Error('Connection ID is required');
+  }
+
   try {
+    console.log('getAllWorkflowsFromN8n called with connectionId:', connectionId);
+
     const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
       body: {
         action: 'listWorkflows',
@@ -259,6 +265,8 @@ export async function getAllWorkflowsFromN8n(connectionId: string): Promise<any[
         data: {}
       }
     });
+
+    console.log('n8n-proxy response:', { proxyResponse, proxyError });
 
     if (proxyError) {
       throw new Error(proxyError.message || 'Failed to fetch workflows from n8n');
