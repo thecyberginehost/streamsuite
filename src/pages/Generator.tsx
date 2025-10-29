@@ -720,8 +720,8 @@ export default function GeneratorNew() {
                 Download
               </Button>
               <PushToN8nButton
-                workflowName={generatedWorkflow?.name || 'Generated Workflow'}
-                workflowJson={generatedWorkflow}
+                workflowName={workflowName || 'Generated Workflow'}
+                workflowJson={workflow}
                 variant="outline"
                 size="sm"
                 className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
