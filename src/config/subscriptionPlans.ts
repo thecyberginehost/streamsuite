@@ -103,6 +103,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '100 credits per month',
       'Everything in Starter',
       'AI debugging & error fixes',
+      'Push workflows to n8n instances',
       'ALL default templates (full library)',
       'Save unlimited custom templates',
       'Template folders & organization',
@@ -112,7 +113,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     comingSoonFeatures: [
       'Workflow conversion (n8n ↔ Make ↔ Zapier)'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'n8n_push'],
     stripePriceId: {
       monthly: 'price_pro_monthly',
       yearly: 'price_pro_yearly'
@@ -139,6 +140,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '250 credits per month',
       '10 batch credits per month',
       'Everything in Pro',
+      'Push workflows to n8n + monitor executions',
       'Workflow Sets (orchestration packages)',
       'Batch workflow generation (up to 10 per set)',
       'Export workflow sets as packages',
@@ -149,7 +151,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'Workflow Set Marketplace (publish your sets)',
       'Advanced export options'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'n8n_push', 'n8n_monitoring'],
     stripePriceId: {
       monthly: 'price_growth_monthly',
       yearly: 'price_growth_yearly'
@@ -188,7 +190,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'Custom branding on exports',
       'Priority processing queue'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'agency_dashboard', 'team_access', 'client_workspaces', 'usage_analytics', 'custom_branding', 'priority_queue', 'credit_delegation'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'agency_dashboard', 'team_access', 'client_workspaces', 'usage_analytics', 'custom_branding', 'priority_queue', 'credit_delegation', 'n8n_push', 'n8n_monitoring'],
     stripePriceId: {
       monthly: 'price_agency_monthly',
       yearly: 'price_agency_yearly'
