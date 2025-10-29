@@ -1,0 +1,175 @@
+/**
+ * n8n Proxy Edge Function
+ *
+ * Proxies requests to n8n instances to avoid CORS issues and keep API keys secure.
+ * This function runs server-side, so n8n doesn't need CORS configuration.
+ */
+
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Get request body
+    const { action, connectionId, data } = await req.json();
+
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    // Get user from auth header
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get n8n connection from database
+    const { data: connection, error: connError } = await supabaseClient
+      .from('n8n_connections')
+      .select('*')
+      .eq('id', connectionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (connError || !connection) {
+      return new Response(
+        JSON.stringify({ error: 'Connection not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { instance_url, api_key } = connection;
+
+    // Route to appropriate n8n API endpoint
+    let n8nResponse;
+
+    switch (action) {
+      case 'test': {
+        // Test connection by fetching workflows
+        n8nResponse = await fetch(`${instance_url}/api/v1/workflows`, {
+          method: 'GET',
+          headers: {
+            'X-N8N-API-KEY': api_key,
+            'Accept': 'application/json',
+          },
+        });
+        break;
+      }
+
+      case 'push': {
+        // Push workflow to n8n
+        const { workflowName, workflowJson } = data;
+        n8nResponse = await fetch(`${instance_url}/api/v1/workflows`, {
+          method: 'POST',
+          headers: {
+            'X-N8N-API-KEY': api_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: workflowName,
+            nodes: workflowJson.nodes,
+            connections: workflowJson.connections,
+            settings: workflowJson.settings || {},
+            staticData: workflowJson.staticData || null,
+          }),
+        });
+        break;
+      }
+
+      case 'monitor': {
+        // Get workflow executions
+        const { workflowId } = data;
+        n8nResponse = await fetch(
+          `${instance_url}/api/v1/executions?workflowId=${workflowId}`,
+          {
+            method: 'GET',
+            headers: {
+              'X-N8N-API-KEY': api_key,
+              'Accept': 'application/json',
+            },
+          }
+        );
+        break;
+      }
+
+      case 'toggleActive': {
+        // Activate/deactivate workflow
+        const { workflowId, active } = data;
+        n8nResponse = await fetch(`${instance_url}/api/v1/workflows/${workflowId}`, {
+          method: 'PATCH',
+          headers: {
+            'X-N8N-API-KEY': api_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ active }),
+        });
+        break;
+      }
+
+      default:
+        return new Response(
+          JSON.stringify({ error: 'Invalid action' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+    }
+
+    // Get response from n8n
+    const responseText = await n8nResponse.text();
+    let responseData;
+
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = { raw: responseText };
+    }
+
+    // Return response
+    if (!n8nResponse.ok) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `n8n API error: ${n8nResponse.status}`,
+          details: responseData,
+        }),
+        { status: n8nResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: responseData,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('n8n proxy error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Internal server error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

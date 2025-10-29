@@ -57,34 +57,37 @@ export async function getN8nConnections(): Promise<N8nConnection[]> {
 }
 
 /**
- * Test n8n connection
+ * Test n8n connection using Edge Function proxy
  */
 export async function testN8nConnection(
-  instanceUrl: string,
-  apiKey: string
-): Promise<{ success: boolean; error?: string }> {
+  connectionId: string
+): Promise<{ success: boolean; error?: string; version?: string }> {
   try {
-    // Remove trailing slash from URL
-    const cleanUrl = instanceUrl.replace(/\/$/, '');
-
-    // Test connection by getting workflows (n8n API endpoint)
-    const response = await fetch(`${cleanUrl}/api/v1/workflows`, {
-      method: 'GET',
-      headers: {
-        'X-N8N-API-KEY': apiKey,
-        'Accept': 'application/json',
+    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        action: 'test',
+        connectionId: connectionId,
       },
     });
 
-    if (!response.ok) {
-      const error = await response.text();
+    if (error) {
       return {
         success: false,
-        error: `Connection failed: ${response.status} - ${error}`,
+        error: error.message || 'Failed to test connection',
       };
     }
 
-    return { success: true };
+    if (data.success) {
+      return {
+        success: true,
+        version: data.data?.data?.[0]?.version,
+      };
+    } else {
+      return {
+        success: false,
+        error: data.error || 'Connection test failed',
+      };
+    }
   } catch (error) {
     return {
       success: false,
@@ -94,24 +97,20 @@ export async function testN8nConnection(
 }
 
 /**
- * Save n8n connection
+ * Save n8n connection (without testing - test happens after save via proxy)
  */
 export async function saveN8nConnection(
   connectionName: string,
   instanceUrl: string,
   apiKey: string
 ): Promise<N8nConnection> {
-  // Test connection first
-  const testResult = await testN8nConnection(instanceUrl, apiKey);
-
   const { data, error } = await supabase
     .from('n8n_connections')
     .insert({
       connection_name: connectionName,
       instance_url: instanceUrl.replace(/\/$/, ''),
       api_key: apiKey,
-      last_tested_at: new Date().toISOString(),
-      last_test_success: testResult.success,
+      is_active: true,
     })
     .select()
     .single();
@@ -162,47 +161,35 @@ export async function deleteN8nConnection(connectionId: string): Promise<void> {
 }
 
 /**
- * Push workflow to n8n instance (Pro plan feature)
+ * Push workflow to n8n instance (Pro plan feature) using Edge Function proxy
  */
 export async function pushWorkflowToN8n(
   connectionId: string,
   workflowName: string,
   workflowJson: any
 ): Promise<PushedWorkflow> {
-  // Get connection details
-  const { data: connection, error: connError } = await supabase
-    .from('n8n_connections')
-    .select('*')
-    .eq('id', connectionId)
-    .single();
-
-  if (connError || !connection) {
-    throw new Error('Connection not found');
-  }
-
   try {
-    // Push workflow to n8n
-    const response = await fetch(`${connection.instance_url}/api/v1/workflows`, {
-      method: 'POST',
-      headers: {
-        'X-N8N-API-KEY': connection.api_key,
-        'Content-Type': 'application/json',
+    // Push workflow via Edge Function proxy
+    const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        action: 'push',
+        connectionId: connectionId,
+        data: {
+          workflowName,
+          workflowJson,
+        },
       },
-      body: JSON.stringify({
-        name: workflowName,
-        nodes: workflowJson.nodes,
-        connections: workflowJson.connections,
-        settings: workflowJson.settings || {},
-        staticData: workflowJson.staticData || null,
-      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to push workflow: ${response.status} - ${errorText}`);
+    if (proxyError) {
+      throw new Error(proxyError.message || 'Failed to push workflow');
     }
 
-    const n8nWorkflow = await response.json();
+    if (!proxyResponse.success) {
+      throw new Error(proxyResponse.error || 'Failed to push workflow');
+    }
+
+    const n8nWorkflow = proxyResponse.data;
 
     // Save to database
     const { data, error } = await supabase

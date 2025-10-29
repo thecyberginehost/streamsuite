@@ -141,34 +141,41 @@ export default function Settings() {
       return;
     }
 
-    if (testResult !== 'success') {
-      toast({
-        title: 'Test connection first',
-        description: 'Please test the connection before saving.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
     setSaving(true);
+    setTestResult(null);
 
     try {
-      await saveN8nConnection(connectionName, instanceUrl, apiKey);
+      // Save connection first (required for Edge Function proxy)
+      const savedConnection = await saveN8nConnection(connectionName, instanceUrl, apiKey);
 
-      toast({
-        title: 'Connection saved',
-        description: `${connectionName} has been saved successfully.`,
-      });
+      // Test connection via Edge Function proxy
+      setTesting(true);
+      const result = await testN8nConnection(savedConnection.id);
+      setTesting(false);
 
-      // Reset form and close dialog
-      setConnectionName('');
-      setInstanceUrl('');
-      setApiKey('');
-      setTestResult(null);
-      setAddDialogOpen(false);
+      if (result.success) {
+        setTestResult('success');
+        toast({
+          title: 'Connection saved & tested',
+          description: `${connectionName} is connected successfully!`,
+        });
 
-      // Reload connections
-      loadConnections();
+        // Reset form and close dialog
+        setConnectionName('');
+        setInstanceUrl('');
+        setApiKey('');
+        setTestResult(null);
+        setAddDialogOpen(false);
+
+        // Reload connections
+        loadConnections();
+      } else {
+        toast({
+          title: 'Connection saved but test failed',
+          description: result.error || 'Connection was saved but could not be verified. Check your URL and API key.',
+          variant: 'destructive'
+        });
+      }
     } catch (error: any) {
       toast({
         title: 'Save failed',
@@ -424,25 +431,6 @@ export default function Settings() {
               </Alert>
             )}
 
-            {/* Test Connection Button */}
-            <Button
-              onClick={handleTestConnection}
-              disabled={testing || !instanceUrl || !apiKey}
-              variant="outline"
-              className="w-full"
-            >
-              {testing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing Connection...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Test Connection
-                </>
-              )}
-            </Button>
           </div>
 
           <DialogFooter>
@@ -460,15 +448,15 @@ export default function Settings() {
             </Button>
             <Button
               onClick={handleSaveConnection}
-              disabled={saving || testResult !== 'success'}
+              disabled={saving || testing}
             >
-              {saving ? (
+              {saving || testing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {testing ? 'Testing...' : 'Saving...'}
                 </>
               ) : (
-                'Save Connection'
+                'Save & Test Connection'
               )}
             </Button>
           </DialogFooter>
