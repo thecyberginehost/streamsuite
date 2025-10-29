@@ -35,7 +35,8 @@ import {
   EyeOff,
   AlertCircle,
   Zap,
-  Lock
+  Lock,
+  Activity
 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { canAccessFeature } from '@/config/subscriptionPlans';
@@ -46,6 +47,7 @@ import {
   deleteN8nConnection,
   type N8nConnection
 } from '@/services/n8nIntegrationService';
+import PushedWorkflowsDialog from '@/components/workflow/PushedWorkflowsDialog';
 
 export default function Settings() {
   const [connections, setConnections] = useState<N8nConnection[]>([]);
@@ -53,6 +55,8 @@ export default function Settings() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [connectionToDelete, setConnectionToDelete] = useState<N8nConnection | null>(null);
+  const [workflowsDialogOpen, setWorkflowsDialogOpen] = useState(false);
+  const [selectedConnection, setSelectedConnection] = useState<N8nConnection | null>(null);
 
   // Form state
   const [connectionName, setConnectionName] = useState('');
@@ -215,6 +219,11 @@ export default function Settings() {
     setDeleteDialogOpen(true);
   };
 
+  const openWorkflowsDialog = (connection: N8nConnection) => {
+    setSelectedConnection(connection);
+    setWorkflowsDialogOpen(true);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -321,6 +330,14 @@ export default function Settings() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openWorkflowsDialog(connection)}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      View Workflows
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -483,6 +500,16 @@ export default function Settings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Pushed Workflows Dialog */}
+      {selectedConnection && (
+        <PushedWorkflowsDialog
+          open={workflowsDialogOpen}
+          onOpenChange={setWorkflowsDialogOpen}
+          connectionId={selectedConnection.id}
+          connectionName={selectedConnection.connection_name}
+        />
+      )}
     </div>
   );
 }
