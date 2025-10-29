@@ -64,6 +64,8 @@ serve(async (req) => {
     }
 
     // Get n8n connection from database
+    console.log('Querying n8n_connections:', { connectionId, userId: user.id });
+
     const { data: connection, error: connError } = await supabaseClient
       .from('n8n_connections')
       .select('*')
@@ -71,9 +73,16 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
+    console.log('n8n_connections query result:', { connection, connError });
+
     if (connError || !connection) {
       return new Response(
-        JSON.stringify({ error: 'Connection not found' }),
+        JSON.stringify({
+          error: 'Connection not found',
+          details: connError?.message || 'No connection record found',
+          connectionId,
+          userId: user.id
+        }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
