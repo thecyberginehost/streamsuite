@@ -161,6 +161,18 @@ const UNETHICAL_PATTERNS = [
 ];
 
 /**
+ * Patterns that indicate requests for physical objects/actions (not workflows)
+ * These waste credits and should be blocked
+ */
+const PHYSICAL_OBJECT_PATTERNS = [
+  { pattern: /^make me a (sandwich|coffee|meal|dinner|lunch|breakfast|snack)/i, item: 'food' },
+  { pattern: /^(cook|bake|prepare|grill|fry) (me )?(a |some )/i, item: 'food' },
+  { pattern: /^(fix|repair|clean|wash|vacuum) (my |the )/i, item: 'physical task' },
+  { pattern: /^build me a (house|car|robot|machine|device)/i, item: 'physical object' },
+  { pattern: /^(paint|draw|sculpt|craft) (me )?(a |an )/i, item: 'art/craft' }
+];
+
+/**
  * Patterns that indicate the request is actually workflow-related
  */
 const WORKFLOW_POSITIVE_SIGNALS = [
@@ -168,7 +180,7 @@ const WORKFLOW_POSITIVE_SIGNALS = [
   'when', 'trigger', 'send notification', 'create task',
   'update database', 'fetch data', 'process', 'schedule',
   'webhook', 'api', 'slack', 'gmail', 'sheets', 'notion',
-  'automate', 'sync', 'monitor', 'alert', 'pipeline'
+  'automate', 'sync', 'monitor', 'alert', 'pipeline', 'order', 'delivery'
 ];
 
 /**
@@ -217,13 +229,19 @@ export function validatePrompt(prompt: string): ValidationResult {
     return ethicalCheck;
   }
 
-  // 4. Check if it's actually a workflow request
+  // 4. Check for physical object requests (saves credits!)
+  const physicalCheck = checkPhysicalObjectRequest(lowerPrompt);
+  if (!physicalCheck.isValid) {
+    return physicalCheck;
+  }
+
+  // 5. Check if it's actually a workflow request
   const workflowCheck = checkIsWorkflowRequest(lowerPrompt);
   if (!workflowCheck.isValid) {
     return workflowCheck;
   }
 
-  // 5. Check specificity
+  // 6. Check specificity
   const specificityCheck = checkSpecificity(lowerPrompt);
   if (!specificityCheck.isValid) {
     return specificityCheck;
@@ -267,6 +285,33 @@ function checkEthicalViolations(prompt: string): ValidationResult {
         category: 'unethical',
         reason: `This request was blocked: ${reason}`,
         suggestion: 'StreamSuite can only generate ethical, legal workflow automations. Please ensure your use case complies with laws and platform terms of service.'
+      };
+    }
+  }
+
+  return { isValid: true, category: 'valid' };
+}
+
+/**
+ * Check if prompt is requesting a physical object/action (not automation)
+ * These waste credits and should be blocked BEFORE calling AI
+ */
+function checkPhysicalObjectRequest(prompt: string): ValidationResult {
+  for (const { pattern, item } of PHYSICAL_OBJECT_PATTERNS) {
+    if (pattern.test(prompt)) {
+      return {
+        isValid: false,
+        category: 'non_workflow',
+        reason: `StreamSuite creates workflow automations, not ${item}! 🤖`,
+        suggestion: `I can help you automate ${item}-related tasks instead:\n\n` +
+                   `${item === 'food' ?
+                     '• Order food via delivery APIs (DoorDash, Uber Eats)\n• Create shopping lists in Notion/Sheets\n• Set meal prep reminders\n• Track dietary preferences\n\nExample: "Order a sandwich from DoorDash when I send /lunch in Slack"' :
+                     item === 'physical task' ?
+                     '• Schedule cleaning services via API\n• Create maintenance task lists\n• Send reminders for chores\n• Track service appointments\n\nExample: "Book a cleaning service when calendar shows move-out date"' :
+                     item === 'physical object' ?
+                     '• Monitor product availability and notify when in stock\n• Track project progress in project management tools\n• Automate purchase orders\n\nExample: "Alert me when GPU is back in stock on Newegg"' :
+                     '• Generate design briefs automatically\n• Organize creative assets in cloud storage\n• Send creation reminders\n\nExample: "Create design task in Asana when client submits form"'
+                   }`
       };
     }
   }
