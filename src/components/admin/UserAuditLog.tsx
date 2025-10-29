@@ -270,9 +270,13 @@ export default function UserAuditLog({ userId, userEmail }: UserAuditLogProps) {
                       {/* Action Type */}
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-medium">{formatActionType(log.action_type)}</p>
-                        {log.event_id && (
+                        {log.event_id ? (
                           <Badge variant="outline" className="text-xs font-mono">
                             {log.event_id}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs opacity-50">
+                            Legacy Log
                           </Badge>
                         )}
                         {log.threat_detected && (

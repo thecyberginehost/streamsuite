@@ -113,6 +113,14 @@ export async function logAction(entry: AuditLogEntry): Promise<void> {
       entry.threat_type
     );
 
+    console.log('[AuditService] Logging action:', {
+      action_type: entry.action_type,
+      action_status: entry.action_status,
+      event_id: eventId,
+      has_ip: !!clientInfo.ipAddress,
+      has_geolocation: !!clientInfo.geolocation
+    });
+
     // Insert audit log with all new fields
     const { error } = await supabase
       .from('audit_logs')
