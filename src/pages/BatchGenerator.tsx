@@ -51,6 +51,7 @@ import UpgradeDialog from '@/components/UpgradeDialog';
 import { generateBatchWorkflows, type BatchWorkflowItem } from '@/services/aiService';
 import { supabase } from '@/integrations/supabase/client';
 import JSZip from 'jszip';
+import { PushToN8nButton } from '@/components/workflow/PushToN8nButton';
 
 interface WorkflowSetItem {
   id: string; // Unique identifier for React keys
@@ -832,6 +833,36 @@ ${workflowSet.some(w => w.dependsOn && w.dependsOn.length > 0) ? '\n⚠️ Note:
                             Child
                           </Badge>
                         )}
+                      </div>
+                      {/* Action buttons */}
+                      <div className="flex gap-1 mt-3" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopyWorkflow(index, workflow)}
+                          className="h-7 px-2"
+                        >
+                          {copied === index ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadWorkflow(workflow)}
+                          className="h-7 px-2"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                        <PushToN8nButton
+                          workflowName={workflow.name}
+                          workflowJson={workflow.json}
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2"
+                        />
                       </div>
                     </div>
                   </div>

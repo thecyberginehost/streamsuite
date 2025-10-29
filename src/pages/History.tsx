@@ -20,6 +20,7 @@ import {
   Eye,
   BookmarkPlus
 } from 'lucide-react';
+import { PushToN8nButton } from '@/components/workflow/PushToN8nButton';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
 import UpgradeCTA from '@/components/UpgradeCTA';
 import {
@@ -405,6 +406,12 @@ export default function History() {
                 >
                   <Download className="h-4 w-4" />
                 </Button>
+                <PushToN8nButton
+                  workflowName={workflow.name}
+                  workflowJson={workflow.workflow_json}
+                  variant="outline"
+                  size="sm"
+                />
                 <Button
                   onClick={() => handleDelete(workflow.id)}
                   variant="ghost"

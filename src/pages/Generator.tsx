@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { Sparkles, Wand2, AlertCircle, CheckCircle2, Download, Copy, Save, Check, Code2 } from 'lucide-react';
+import { PushToN8nButton } from '@/components/workflow/PushToN8nButton';
 import { cn } from '@/lib/utils';
 
 // Services
@@ -718,6 +719,13 @@ export default function GeneratorNew() {
                 <Download className="h-3.5 w-3.5" />
                 Download
               </Button>
+              <PushToN8nButton
+                workflowName={generatedWorkflow?.name || 'Generated Workflow'}
+                workflowJson={generatedWorkflow}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
+              />
             </div>
           )}
         </div>
