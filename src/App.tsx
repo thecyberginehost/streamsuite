@@ -16,6 +16,7 @@ import Debugger from "./pages/Debugger";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Monitoring from "./pages/Monitoring";
+import WorkflowAnalytics from "./pages/WorkflowAnalytics";
 import Docs from "./pages/Docs";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
@@ -68,6 +69,7 @@ const App = () => {
                   <Route path="debugger" element={<Debugger />} />
                   <Route path="batch" element={<BatchGenerator />} />
                   <Route path="monitoring" element={<Monitoring />} />
+                  <Route path="monitoring/:connectionId" element={<WorkflowAnalytics />} />
                   <Route path="enterprise-builder" element={<EnterpriseBuilder />} />
                   <Route path="history" element={<History />} />
                   <Route path="docs" element={<Docs />} />

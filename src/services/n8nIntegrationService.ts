@@ -381,6 +381,45 @@ export async function monitorWorkflow(pushedWorkflowId: string): Promise<PushedW
 }
 
 /**
+ * Toggle workflow active status (activate/deactivate)
+ */
+export async function toggleWorkflowActive(
+  connectionId: string,
+  workflowId: string,
+  active: boolean
+): Promise<any> {
+  if (!connectionId || !workflowId) {
+    throw new Error('Connection ID and Workflow ID are required');
+  }
+
+  try {
+    const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        action: 'toggleActive',
+        connectionId: connectionId,
+        data: {
+          workflowId,
+          active,
+        },
+      },
+    });
+
+    if (proxyError) {
+      throw new Error(proxyError.message || 'Failed to toggle workflow status');
+    }
+
+    if (!proxyResponse.success) {
+      throw new Error(proxyResponse.error || 'Failed to toggle workflow status');
+    }
+
+    return proxyResponse.data;
+  } catch (error) {
+    console.error('Error toggling workflow status:', error);
+    throw error;
+  }
+}
+
+/**
  * Get workflow executions from n8n (Growth plan feature - MVP)
  * Simple list of last 20 executions
  */

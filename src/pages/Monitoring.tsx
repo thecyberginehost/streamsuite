@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,8 @@ import {
   AlertCircle,
   Zap,
   CheckCircle2,
-  XCircle
+  XCircle,
+  BarChart3
 } from 'lucide-react';
 import { getN8nConnections } from '@/services/n8nIntegrationService';
 import PushedWorkflowsDialog from '@/components/workflow/PushedWorkflowsDialog';
@@ -24,6 +26,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { canAccessFeature } from '@/config/subscriptionPlans';
 
 export default function Monitoring() {
+  const navigate = useNavigate();
   const [connections, setConnections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<any | null>(null);
@@ -167,14 +170,25 @@ export default function Monitoring() {
                         </p>
                       )}
 
-                      <Button
-                        onClick={() => openWorkflows(connection)}
-                        className="w-full"
-                        variant="default"
-                      >
-                        <Activity className="h-4 w-4 mr-2" />
-                        View Workflows
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => openWorkflows(connection)}
+                          className="flex-1"
+                          variant="outline"
+                        >
+                          <Activity className="h-4 w-4 mr-2" />
+                          Quick View
+                        </Button>
+
+                        <Button
+                          onClick={() => navigate(`/monitoring/${connection.id}`)}
+                          className="flex-1"
+                          variant="default"
+                        >
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Analytics
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

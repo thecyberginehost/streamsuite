@@ -24,11 +24,12 @@ import {
   AlertCircle,
   Server
 } from 'lucide-react';
-import { getPushedWorkflows, getAllWorkflowsFromN8n } from '@/services/n8nIntegrationService';
+import { getPushedWorkflows, getAllWorkflowsFromN8n, toggleWorkflowActive } from '@/services/n8nIntegrationService';
 import WorkflowExecutionsList from './WorkflowExecutionsList';
 import { useToast } from '@/hooks/use-toast';
 import { canAccessFeature } from '@/config/subscriptionPlans';
 import { useCredits } from '@/hooks/useCredits';
+import { useNavigate } from 'react-router-dom';
 
 interface PushedWorkflowsDialogProps {
   open: boolean;
@@ -48,11 +49,37 @@ export default function PushedWorkflowsDialog({
   const [loadingPushed, setLoadingPushed] = useState(true);
   const [loadingAll, setLoadingAll] = useState(true);
   const [selectedWorkflow, setSelectedWorkflow] = useState<any | null>(null);
+  const [togglingWorkflow, setTogglingWorkflow] = useState<string | null>(null);
   const { toast } = useToast();
   const { balance } = useCredits();
+  const navigate = useNavigate();
 
   const userTier = balance?.subscription_tier || 'free';
   const canMonitor = canAccessFeature(userTier, 'n8n_monitoring');
+
+  const handleToggleActive = async (workflowId: string, currentStatus: boolean) => {
+    try {
+      setTogglingWorkflow(workflowId);
+      await toggleWorkflowActive(connectionId, workflowId, !currentStatus);
+
+      toast({
+        title: 'Success',
+        description: `Workflow ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+
+      // Refresh workflows to show updated status
+      loadAllWorkflows();
+    } catch (error) {
+      console.error('Failed to toggle workflow:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to change workflow status',
+        variant: 'destructive'
+      });
+    } finally {
+      setTogglingWorkflow(null);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -136,10 +163,25 @@ export default function PushedWorkflowsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>Workflows - {connectionName}</DialogTitle>
-          <DialogDescription>
-            View and monitor workflows from your n8n instance
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>Workflows - {connectionName}</DialogTitle>
+              <DialogDescription>
+                Quick preview of workflows from your n8n instance
+              </DialogDescription>
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                onOpenChange(false);
+                navigate(`/monitoring/${connectionId}`);
+              }}
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              Full Analytics
+            </Button>
+          </div>
         </DialogHeader>
 
         <Tabs defaultValue="all" className="w-full">
@@ -212,17 +254,34 @@ export default function PushedWorkflowsDialog({
                         </p>
                       </div>
 
-                      {canMonitor && (
+                      <div className="flex items-center gap-2">
                         <Button
-                          variant="outline"
+                          variant={workflow.active ? "outline" : "default"}
                           size="sm"
-                          onClick={() => setSelectedWorkflow(workflow)}
+                          onClick={() => handleToggleActive(workflow.id, workflow.active)}
+                          disabled={togglingWorkflow === workflow.id}
                         >
-                          <Activity className="h-4 w-4 mr-2" />
-                          View Executions
-                          <ChevronRight className="h-4 w-4 ml-1" />
+                          {togglingWorkflow === workflow.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : workflow.active ? (
+                            'Deactivate'
+                          ) : (
+                            'Activate'
+                          )}
                         </Button>
-                      )}
+
+                        {canMonitor && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedWorkflow(workflow)}
+                          >
+                            <Activity className="h-4 w-4 mr-2" />
+                            View Executions
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </Card>
                 ))}
