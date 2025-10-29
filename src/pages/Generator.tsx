@@ -55,6 +55,12 @@ export default function GeneratorNew() {
   const [estimatedCredits, setEstimatedCredits] = useState(1);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
+  // Copy/paste detection state
+  const [promptInputMethod, setPromptInputMethod] = useState<'typed' | 'pasted' | 'mixed'>('typed');
+  const [promptPasteCount, setPromptPasteCount] = useState(0);
+  const [codePromptInputMethod, setCodePromptInputMethod] = useState<'typed' | 'pasted' | 'mixed'>('typed');
+  const [codePromptPasteCount, setCodePromptPasteCount] = useState(0);
+
   // Code generator state
   const [codePrompt, setCodePrompt] = useState('');
   const [codePlatform, setCodePlatform] = useState<'n8n' | 'make' | 'zapier'>('n8n');

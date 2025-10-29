@@ -5,6 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { SanitizationResult } from '@/utils/jsonSanitizer';
+import { generateEventId, getEventCode } from '@/lib/eventCodes';
 
 // =====================================================
 // TYPE DEFINITIONS
@@ -48,6 +49,17 @@ export interface AuditLogEntry {
   credits_used?: number;
   api_calls_made?: number;
   execution_time_ms?: number;
+  // New fields for enhanced tracking
+  event_id?: string;
+  full_prompt?: string;
+  credits_before?: number;
+  credits_after?: number;
+  input_method?: 'typed' | 'pasted' | 'mixed' | 'unknown';
+  paste_event_count?: number;
+  geolocation?: Record<string, any>;
+  error_code?: string;
+  error_message?: string;
+  error_stack?: string;
 }
 
 export interface UserActivitySummary {
@@ -91,17 +103,26 @@ export async function logAction(entry: AuditLogEntry): Promise<void> {
       return;
     }
 
-    // Get IP address and user agent from browser
+    // Get IP address, user agent, and geolocation from browser
     const clientInfo = await getClientInfo();
 
-    // Insert audit log
+    // Auto-generate event ID if not provided
+    const eventId = entry.event_id || generateEventId(
+      entry.action_type,
+      entry.action_status,
+      entry.threat_type
+    );
+
+    // Insert audit log with all new fields
     const { error } = await supabase
       .from('audit_logs')
       .insert({
         user_id: user.id,
         ...entry,
+        event_id: eventId,
         ip_address: entry.ip_address || clientInfo.ipAddress,
-        user_agent: entry.user_agent || clientInfo.userAgent
+        user_agent: entry.user_agent || clientInfo.userAgent,
+        geolocation: entry.geolocation || clientInfo.geolocation
       });
 
     if (error) {
@@ -482,25 +503,61 @@ export async function suspendUser(
 // =====================================================
 
 /**
- * Get client information (IP, user agent)
+ * Get client information (IP, user agent, geolocation)
+ * Uses ipapi.co for IP detection (free tier: 1000 requests/day)
  */
-async function getClientInfo(): Promise<{ ipAddress: string | null; userAgent: string }> {
+async function getClientInfo(): Promise<{
+  ipAddress: string | null;
+  userAgent: string;
+  geolocation: Record<string, any> | null;
+}> {
   const userAgent = navigator.userAgent;
-
-  // Get IP address from a third-party service (optional)
-  // Note: This requires a backend proxy to avoid CORS issues
   let ipAddress: string | null = null;
+  let geolocation: Record<string, any> | null = null;
 
   try {
-    // Optional: Implement IP detection via your backend
-    // const response = await fetch('/api/get-client-ip');
-    // const data = await response.json();
-    // ipAddress = data.ip;
+    // Try to get IP and geolocation from ipapi.co (free, no auth required)
+    const response = await fetch('https://ipapi.co/json/', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      ipAddress = data.ip || null;
+
+      // Store geolocation data
+      if (data.city && data.country_name) {
+        geolocation = {
+          city: data.city,
+          region: data.region,
+          country: data.country_name,
+          country_code: data.country_code,
+          postal: data.postal,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          timezone: data.timezone,
+          org: data.org // ISP/Organization
+        };
+        console.log(`[AuditService] Location detected: ${data.city}, ${data.country_name}`);
+      }
+    }
   } catch (error) {
-    console.warn('[AuditService] Could not fetch IP address');
+    console.warn('[AuditService] Could not fetch IP address:', error);
+
+    // Fallback: Try ipify as backup (simpler, IP only, no geolocation)
+    try {
+      const fallbackResponse = await fetch('https://api.ipify.org?format=json');
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        ipAddress = fallbackData.ip || null;
+      }
+    } catch (fallbackError) {
+      console.warn('[AuditService] Fallback IP detection failed');
+    }
   }
 
-  return { ipAddress, userAgent };
+  return { ipAddress, userAgent, geolocation };
 }
 
 /**
