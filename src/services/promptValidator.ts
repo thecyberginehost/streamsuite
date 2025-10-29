@@ -112,7 +112,14 @@ const SECURITY_PATTERNS = [
   { pattern: /you\s+are\s+now\s+(a|an)\s+\w+/i, reason: 'Prompt injection attempt detected: Role override', severity: 'high' },
   { pattern: /forget\s+everything/i, reason: 'Prompt injection attempt detected', severity: 'high' },
   { pattern: /new\s+instructions?:/i, reason: 'Prompt injection attempt detected', severity: 'high' },
-  { pattern: /system\s+prompt|reveal\s+your\s+prompt/i, reason: 'Prompt extraction attempt detected', severity: 'medium' }
+  { pattern: /system\s+prompt|reveal\s+your\s+prompt/i, reason: 'Prompt extraction attempt detected', severity: 'medium' },
+
+  // Data exfiltration attempts
+  { pattern: /(get|give|show|export|dump|extract).*?(all|entire|every).*(data|database|table|schema|user|password|credential)/i, reason: 'Data exfiltration attempt detected: Unauthorized data access request', severity: 'critical' },
+  { pattern: /information_schema\.tables|sys\.tables|sqlite_master/i, reason: 'Data exfiltration attempt detected: Database schema enumeration', severity: 'critical' },
+  { pattern: /select\s+\*\s+from.*information_schema/i, reason: 'Data exfiltration attempt detected: Metadata query', severity: 'critical' },
+  { pattern: /(list|show|enumerate).*(all|every).*(table|database|user|credential)/i, reason: 'Data exfiltration attempt detected: Information gathering', severity: 'high' },
+  { pattern: /instead of.*workflow.*generate.*sql/i, reason: 'Prompt injection attempt detected: AI output manipulation', severity: 'high' }
 ];
 
 /**
