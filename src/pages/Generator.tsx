@@ -37,6 +37,7 @@ import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans'
 import UpgradeCTA from '@/components/UpgradeCTA';
 import UpgradeDialog from '@/components/UpgradeDialog';
 import { Coins } from 'lucide-react';
+import { logSuccess, logFailure } from '@/services/auditService';
 
 export default function GeneratorNew() {
   // State management
@@ -209,6 +210,17 @@ export default function GeneratorNew() {
       // Calculate new balance after deduction
       const newTotalBalance = totalCredits - actualCreditCost;
 
+      // 📊 LOG SUCCESS: Workflow generation succeeded
+      await logSuccess('workflow_generation', {
+        platform,
+        prompt: prompt.substring(0, 100),
+        workflow_name: name,
+        credits_used: actualCreditCost,
+        tokens_used: typeof result.tokensUsed === 'object' ? result.tokensUsed.total : result.tokensUsed || 0,
+        time_taken_ms: timeTaken,
+        node_count: result.workflow?.nodes?.length || 0
+      });
+
       toast({
         title: '✅ Workflow generated!',
         description: `Created in ${(timeTaken / 1000).toFixed(1)}s. You have ${newTotalBalance} credit${newTotalBalance !== 1 ? 's' : ''} remaining.`,
@@ -233,6 +245,13 @@ export default function GeneratorNew() {
 
     } catch (error) {
       console.error('Generation error:', error);
+
+      // 📊 LOG FAILURE: Workflow generation failed
+      await logFailure('workflow_generation', error instanceof Error ? error.message : 'Unknown error', {
+        platform,
+        prompt: prompt.substring(0, 100)
+      });
+
       toast({
         title: 'Generation failed',
         description: error instanceof Error ? error.message : 'Could not generate workflow. Please try again.',
@@ -396,6 +415,16 @@ export default function GeneratorNew() {
 
       setGeneratedCode(result.code);
 
+      // 📊 LOG SUCCESS: Code generation succeeded
+      await logSuccess('workflow_generation', {
+        type: 'code_generation',
+        platform: codePlatform,
+        language: codeLanguage,
+        prompt: codePrompt.substring(0, 100),
+        credits_used: 1,
+        code_length: result.code.length
+      });
+
       const platformName = codePlatform === 'n8n' ? 'n8n' : codePlatform === 'make' ? 'Make.com' : 'Zapier';
       const newTotalBalance = totalCredits - 1;
       toast({
@@ -405,6 +434,15 @@ export default function GeneratorNew() {
       });
     } catch (error) {
       console.error('Code generation error:', error);
+
+      // 📊 LOG FAILURE: Code generation failed
+      await logFailure('workflow_generation', error instanceof Error ? error.message : 'Unknown error', {
+        type: 'code_generation',
+        platform: codePlatform,
+        language: codeLanguage,
+        prompt: codePrompt.substring(0, 100)
+      });
+
       toast({
         title: 'Generation failed',
         description: error instanceof Error ? error.message : 'Could not generate code. Please try again.',

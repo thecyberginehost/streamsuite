@@ -126,11 +126,18 @@ export async function logSuccess(
   details?: Record<string, any>,
   creditsUsed = 0
 ): Promise<void> {
+  // Extract credits_used from details if provided there
+  const extractedCredits = details?.credits_used || creditsUsed;
+  const extractedApiCalls = details?.api_calls_made || 0;
+  const extractedExecutionTime = details?.time_taken_ms || details?.execution_time_ms || undefined;
+
   await logAction({
     action_type: actionType,
     action_status: 'success',
     action_details: details,
-    credits_used: creditsUsed,
+    credits_used: extractedCredits,
+    api_calls_made: extractedApiCalls,
+    execution_time_ms: extractedExecutionTime,
     threat_detected: false
   });
 }
