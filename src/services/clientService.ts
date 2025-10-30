@@ -224,12 +224,13 @@ export async function deleteClientProject(projectId: string): Promise<void> {
 }
 
 /**
- * Get client stats (workflows, projects, etc.)
+ * Get client stats (workflows, projects, connections, etc.)
  */
 export async function getClientStats(clientId: string): Promise<{
   totalProjects: number;
   activeProjects: number;
   totalWorkflows: number;
+  totalConnections: number;
   recentActivity: Date | null;
 }> {
   // Get projects count
@@ -262,10 +263,24 @@ export async function getClientStats(clientId: string): Promise<{
     ? new Date(workflows[0].created_at)
     : null;
 
+  // Get connections count
+  const { data: connections, error: connectionsError } = await supabase
+    .from('client_platform_connections')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('is_active', true);
+
+  if (connectionsError) {
+    console.error('Error fetching connections stats:', connectionsError);
+  }
+
+  const totalConnections = connections?.length || 0;
+
   return {
     totalProjects,
     activeProjects,
     totalWorkflows,
+    totalConnections,
     recentActivity,
   };
 }
