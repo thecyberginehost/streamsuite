@@ -23,7 +23,7 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import BatchGenerator from "./pages/BatchGenerator";
-import TeamDashboard from "./pages/TeamDashboard";
+import AgencyDashboard from "./pages/AgencyDashboard";
 import EnterpriseBuilder from "./pages/EnterpriseBuilder";
 import NotFound from "./pages/NotFound";
 
@@ -50,10 +50,10 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
 
-                {/* Team Dashboard (team.streamsuite.io - for now on same domain) */}
-                <Route path="/team" element={
+                {/* Agency Dashboard (agency.streamsuite.io - for now on same domain) */}
+                <Route path="/agency" element={
                   <ProtectedRoute>
-                    <TeamDashboard />
+                    <AgencyDashboard />
                   </ProtectedRoute>
                 } />
 
