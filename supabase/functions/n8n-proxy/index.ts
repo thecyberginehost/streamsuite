@@ -223,17 +223,25 @@ serve(async (req) => {
         console.log('Current workflow:', currentWorkflow);
 
         // Update the workflow with the new active status
-        // n8n requires the full workflow object when updating
+        // n8n only accepts specific fields - strip out metadata fields
+        const updateBody = {
+          name: currentWorkflow.name,
+          nodes: currentWorkflow.nodes,
+          connections: currentWorkflow.connections,
+          settings: currentWorkflow.settings || {},
+          staticData: currentWorkflow.staticData || null,
+          active,
+        };
+
+        console.log('Sending update with body:', updateBody);
+
         n8nResponse = await fetch(`${instance_url}/api/v1/workflows/${workflowId}`, {
           method: 'PUT',
           headers: {
             'X-N8N-API-KEY': api_key,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            ...currentWorkflow,
-            active,
-          }),
+          body: JSON.stringify(updateBody),
         });
 
         console.log('Toggle response status:', n8nResponse.status);

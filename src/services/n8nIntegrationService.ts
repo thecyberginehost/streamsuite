@@ -393,6 +393,8 @@ export async function toggleWorkflowActive(
   }
 
   try {
+    console.log('toggleWorkflowActive called with:', { connectionId, workflowId, active });
+
     const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
       body: {
         action: 'toggleActive',
@@ -404,17 +406,39 @@ export async function toggleWorkflowActive(
       },
     });
 
+    console.log('Edge Function response:', { proxyResponse, proxyError });
+
     if (proxyError) {
+      console.error('Edge Function error details:', {
+        message: proxyError.message,
+        name: proxyError.name,
+        context: proxyError.context,
+        // @ts-ignore - accessing internal error details
+        details: proxyError.details,
+      });
+
+      // Try to get more error details
+      if (proxyError.context) {
+        console.error('Error context:', proxyError.context);
+      }
+
       throw new Error(proxyError.message || 'Failed to toggle workflow status');
     }
 
+    if (!proxyResponse) {
+      console.error('No response from Edge Function');
+      throw new Error('No response from Edge Function');
+    }
+
     if (!proxyResponse.success) {
-      throw new Error(proxyResponse.error || 'Failed to toggle workflow status');
+      console.error('Edge Function returned error:', proxyResponse);
+      throw new Error(proxyResponse.error || proxyResponse.details || 'Failed to toggle workflow status');
     }
 
     return proxyResponse.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error toggling workflow status:', error);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
     throw error;
   }
 }
