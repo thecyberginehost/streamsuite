@@ -203,45 +203,19 @@ serve(async (req) => {
         // Activate/deactivate workflow
         const { workflowId, active } = data;
 
-        console.log('Toggle active request:', { workflowId, active, url: `${instance_url}/api/v1/workflows/${workflowId}` });
+        console.log('Toggle active request:', { workflowId, active, url: `${instance_url}/api/v1/workflows/${workflowId}/${active ? 'activate' : 'deactivate'}` });
 
-        // First, get the current workflow to ensure we have all required fields
-        const getResponse = await fetch(`${instance_url}/api/v1/workflows/${workflowId}`, {
-          method: 'GET',
+        // n8n has specific endpoints for activate/deactivate
+        const endpoint = active
+          ? `${instance_url}/api/v1/workflows/${workflowId}/activate`
+          : `${instance_url}/api/v1/workflows/${workflowId}/deactivate`;
+
+        n8nResponse = await fetch(endpoint, {
+          method: 'PATCH',
           headers: {
             'X-N8N-API-KEY': api_key,
             'Accept': 'application/json',
           },
-        });
-
-        if (!getResponse.ok) {
-          console.error('Failed to get workflow:', await getResponse.text());
-          throw new Error(`Failed to get workflow: ${getResponse.status}`);
-        }
-
-        const currentWorkflow = await getResponse.json();
-        console.log('Current workflow:', currentWorkflow);
-
-        // Update the workflow with the new active status
-        // n8n only accepts specific fields - strip out metadata fields
-        const updateBody = {
-          name: currentWorkflow.name,
-          nodes: currentWorkflow.nodes,
-          connections: currentWorkflow.connections,
-          settings: currentWorkflow.settings || {},
-          staticData: currentWorkflow.staticData || null,
-          active,
-        };
-
-        console.log('Sending update with body:', updateBody);
-
-        n8nResponse = await fetch(`${instance_url}/api/v1/workflows/${workflowId}`, {
-          method: 'PUT',
-          headers: {
-            'X-N8N-API-KEY': api_key,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateBody),
         });
 
         console.log('Toggle response status:', n8nResponse.status);
