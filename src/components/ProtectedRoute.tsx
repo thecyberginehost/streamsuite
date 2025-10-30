@@ -3,7 +3,7 @@
  *
  * Wraps routes that require authentication
  * Redirects to /login if user is not authenticated
- * Redirects Agency tier users to /team dashboard
+ * Redirects Agency tier users to /agency dashboard
  */
 
 import { Navigate, useLocation } from 'react-router-dom';
@@ -12,10 +12,10 @@ import { useProfile } from '@/hooks/useProfile';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  teamOnly?: boolean; // If true, only allow team dashboard access
+  agencyOnly?: boolean; // If true, only allow agency dashboard access
 }
 
-export function ProtectedRoute({ children, teamOnly = false }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, agencyOnly = false }: ProtectedRouteProps) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const location = useLocation();
@@ -41,23 +41,23 @@ export function ProtectedRoute({ children, teamOnly = false }: ProtectedRoutePro
 
   // Agency tier routing logic
   const isAgencyTier = profile?.subscription_tier === 'agency';
-  const isTeamRoute = location.pathname.startsWith('/team');
+  const isAgencyRoute = location.pathname.startsWith('/agency');
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAdmin = profile?.is_admin === true;
 
   // If trying to access admin panel but not an admin, redirect appropriately
   if (isAdminRoute && !isAdmin) {
-    return <Navigate to={isAgencyTier ? "/team" : "/"} replace />;
+    return <Navigate to={isAgencyTier ? "/agency" : "/"} replace />;
   }
 
-  // If agency user tries to access regular app, redirect to team dashboard
+  // If agency user tries to access regular app, redirect to agency dashboard
   // Exception: Allow admin users to access admin panel
-  if (isAgencyTier && !isTeamRoute && !isAdminRoute && !teamOnly) {
-    return <Navigate to="/team" replace />;
+  if (isAgencyTier && !isAgencyRoute && !isAdminRoute && !agencyOnly) {
+    return <Navigate to="/agency" replace />;
   }
 
-  // If non-agency user tries to access team dashboard, redirect to app
-  if (!isAgencyTier && isTeamRoute) {
+  // If non-agency user tries to access agency dashboard, redirect to app
+  if (!isAgencyTier && isAgencyRoute) {
     return <Navigate to="/" replace />;
   }
 
