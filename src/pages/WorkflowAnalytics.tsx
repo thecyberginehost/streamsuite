@@ -188,17 +188,23 @@ export default function WorkflowAnalytics() {
     }
   };
 
-  // Calculate analytics
+  // Calculate analytics from real execution data
   const totalExecutions = executions.length;
   const successfulExecutions = executions.filter((e: any) =>
-    e.finished === true && !e.stoppedAt && e.status === 'success'
+    e.status === 'success'
   ).length;
   const failedExecutions = executions.filter((e: any) =>
     e.status === 'error' || e.status === 'crashed' || e.status === 'failed'
   ).length;
   const runningExecutions = executions.filter((e: any) => e.status === 'running').length;
 
-  const successRate = totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(1) : '0';
+  // Calculate success rate as percentage of successful vs (successful + failed)
+  const completedExecutions = successfulExecutions + failedExecutions;
+  const successRate = completedExecutions > 0
+    ? ((successfulExecutions / completedExecutions) * 100).toFixed(1)
+    : totalExecutions > 0 && runningExecutions === totalExecutions
+      ? 'N/A'
+      : '0';
 
   // Chart data
   const pieChartData = [
