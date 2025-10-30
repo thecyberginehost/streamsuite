@@ -50,10 +50,15 @@ ALTER TABLE public.workflows
 ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.client_projects(id) ON DELETE SET NULL;
 
--- Add client_id to workflow_sets table
-ALTER TABLE public.workflow_sets
-ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL,
-ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.client_projects(id) ON DELETE SET NULL;
+-- Add client_id to workflow_sets table (if it exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'workflow_sets') THEN
+    ALTER TABLE public.workflow_sets
+    ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.client_projects(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_clients_agency_id ON public.clients(agency_id);
@@ -69,8 +74,14 @@ CREATE INDEX IF NOT EXISTS idx_client_projects_status ON public.client_projects(
 CREATE INDEX IF NOT EXISTS idx_workflows_client_id ON public.workflows(client_id);
 CREATE INDEX IF NOT EXISTS idx_workflows_project_id ON public.workflows(project_id);
 
-CREATE INDEX IF NOT EXISTS idx_workflow_sets_client_id ON public.workflow_sets(client_id);
-CREATE INDEX IF NOT EXISTS idx_workflow_sets_project_id ON public.workflow_sets(project_id);
+-- Indexes for workflow_sets (if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'workflow_sets') THEN
+    CREATE INDEX IF NOT EXISTS idx_workflow_sets_client_id ON public.workflow_sets(client_id);
+    CREATE INDEX IF NOT EXISTS idx_workflow_sets_project_id ON public.workflow_sets(project_id);
+  END IF;
+END $$;
 
 -- RLS Policies
 
