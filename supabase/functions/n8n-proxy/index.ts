@@ -211,7 +211,7 @@ serve(async (req) => {
           : `${instance_url}/api/v1/workflows/${workflowId}/deactivate`;
 
         n8nResponse = await fetch(endpoint, {
-          method: 'PATCH',
+          method: 'POST',
           headers: {
             'X-N8N-API-KEY': api_key,
             'Accept': 'application/json',
