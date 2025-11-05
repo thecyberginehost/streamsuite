@@ -5,6 +5,8 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { testN8NConnection } from './n8nApiService';
+import { testMakeConnection } from './makeApiService';
 
 export interface ClientPlatformConnection {
   id: string;
@@ -19,9 +21,11 @@ export interface ClientPlatformConnection {
   // Make.com specific
   make_api_key?: string;
   make_team_id?: string;
+  make_instance_url?: string;
 
   // Zapier specific
   zapier_api_key?: string;
+  zapier_instance_url?: string; // Client-specific Zapier workspace URL
 
   // Status
   is_active: boolean;
@@ -96,8 +100,10 @@ export async function createClientConnection(
     // Make
     make_api_key?: string;
     make_team_id?: string;
+    make_instance_url?: string;
     // Zapier
     zapier_api_key?: string;
+    zapier_instance_url?: string;
   }
 ): Promise<ClientPlatformConnection> {
   const { data, error } = await supabase
@@ -125,7 +131,9 @@ export async function updateClientConnection(
     n8n_api_key?: string;
     make_api_key?: string;
     make_team_id?: string;
+    make_instance_url?: string;
     zapier_api_key?: string;
+    zapier_instance_url?: string;
     is_active?: boolean;
   }
 ): Promise<ClientPlatformConnection> {
@@ -182,26 +190,48 @@ export async function testClientConnection(connectionId: string): Promise<{
     let testResult = { success: false, message: 'Unknown error' };
 
     if (connection.platform === 'n8n') {
-      // Test n8n connection by fetching workflows
-      const response = await fetch(`${connection.n8n_instance_url}/api/v1/workflows`, {
-        method: 'GET',
-        headers: {
-          'X-N8N-API-KEY': connection.n8n_api_key!,
-          'Accept': 'application/json',
-        },
+      // Test n8n connection using the API service
+      const result = await testN8NConnection({
+        instanceUrl: connection.n8n_instance_url!,
+        apiKey: connection.n8n_api_key!,
       });
 
-      if (response.ok) {
-        testResult = { success: true, message: 'n8n connection successful' };
+      if (result.success) {
+        testResult = {
+          success: true,
+          message: '✅ n8n connection successful - API accessible',
+        };
       } else {
-        testResult = { success: false, message: `n8n connection failed: ${response.status}` };
+        testResult = {
+          success: false,
+          message: `❌ n8n connection failed: ${result.error}`,
+        };
       }
     } else if (connection.platform === 'make') {
-      // Test Make.com connection
-      testResult = { success: true, message: 'Make.com connection test not implemented yet' };
+      // Test Make.com connection using the API service
+      const result = await testMakeConnection({
+        apiKey: connection.make_api_key!,
+        teamId: connection.make_team_id,
+        region: 'us1', // Default to US region, could be stored in metadata
+      });
+
+      if (result.success) {
+        testResult = {
+          success: true,
+          message: '✅ Make.com connection successful - API accessible',
+        };
+      } else {
+        testResult = {
+          success: false,
+          message: `❌ Make.com connection failed: ${result.error}`,
+        };
+      }
     } else if (connection.platform === 'zapier') {
-      // Test Zapier connection
-      testResult = { success: true, message: 'Zapier connection test not implemented yet' };
+      // Zapier has no workflow management API
+      testResult = {
+        success: false,
+        message: '⚠️ Zapier does not provide a workflow management API. Limited functionality available.',
+      };
     }
 
     // Update test results in database

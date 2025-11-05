@@ -1,466 +1,414 @@
-# StreamSuite Multi-Subdomain Deployment Guide
+# StreamSuite - 3-Domain Deployment Architecture
 
-This guide explains how to deploy StreamSuite across multiple subdomains with the correct routing architecture.
+This guide explains how to deploy StreamSuite across **3 domains** with optimal separation of concerns, performance, and scalability.
 
-## 🌐 Subdomain Architecture
+## 🌐 Domain Architecture
 
-StreamSuite uses a multi-subdomain architecture to separate concerns:
+StreamSuite uses a **3-domain architecture** for the MVP launch:
 
-| Subdomain | Purpose | Access Level | Routes |
-|-----------|---------|--------------|--------|
-| **streamsuite.io** | Marketing site & pricing | Public | Landing page, `/pricing`, `/about` |
-| **app.streamsuite.io** | Main application | Authenticated users | `/`, `/converter`, `/debugger`, `/history`, `/settings`, `/templates` |
-| **employee.streamsuite.io** | Admin panel | Admin users only | `/admin` |
-| **agency.streamsuite.io** | Agency portal (future) | Agency tier users | Agency dashboard, client management |
+| Domain | Purpose | Access Level | Key Features |
+|--------|---------|--------------|--------------|
+| **streamsuite.io** | Marketing site | Public | Landing page, pricing, login/signup |
+| **app.streamsuite.io** | Main application | Authenticated users | Generator, converter, debugger, templates, history, settings, admin |
+| **agency.streamsuite.io** | Agency portal | Agency tier users only | Client management, team features, API keys, analytics |
 
 ---
 
-## 📁 Project Structure for Multi-Subdomain Setup
+## 🎯 Deployment Strategy: Single Codebase, Multiple Domains
 
-### Option 1: Single Monorepo (Recommended for MVP)
+### Recommended Approach for MVP Launch
 
-```
-construct03-main/
-├── src/
-│   ├── pages/
-│   │   ├── marketing/      # streamsuite.io pages
-│   │   │   ├── Landing.tsx
-│   │   │   ├── Pricing.tsx
-│   │   │   └── About.tsx
-│   │   ├── app/            # app.streamsuite.io pages
-│   │   │   ├── Generator.tsx
-│   │   │   ├── Converter.tsx
-│   │   │   ├── Debugger.tsx
-│   │   │   ├── History.tsx
-│   │   │   ├── Settings.tsx
-│   │   │   └── Templates.tsx
-│   │   └── admin/          # employee.streamsuite.io pages
-│   │       └── Admin.tsx
-│   ├── App.tsx            # Main router with subdomain detection
-│   └── main.tsx
-├── vercel.json            # Vercel routing configuration
-└── package.json
-```
+We're using **one codebase** with **domain-based routing** for all three domains. This is the best practice for your one-week launch timeline.
 
-### Option 2: Separate Repos (For Scale)
+#### Why This Approach?
+
+✅ **Shared code** - Components, services, and utilities across all domains
+✅ **Single deployment** - One pipeline, one build, simpler CI/CD
+✅ **Easier to maintain** - No code duplication, consistent authentication
+✅ **Fast to implement** - Ready within one week
+✅ **Scales well** - Can split later if needed
+
+### How It Works
+
+1. Deploy **one Vercel project** connected to GitHub
+2. Add **all 3 domains** to the same Vercel project
+3. App detects `window.location.hostname` and renders appropriate routes
+4. All domains point to same deployment, different routes shown per domain
+
+### Domain Routing Logic
 
 ```
-streamsuite-marketing/     # streamsuite.io
-streamsuite-app/          # app.streamsuite.io
-streamsuite-admin/        # employee.streamsuite.io
-streamsuite-agency/       # agency.streamsuite.io (future)
+streamsuite.io          → Landing, Pricing, Login/Signup
+app.streamsuite.io      → Dashboard, Generator, Debugger, etc.
+agency.streamsuite.io   → Agency Dashboard, Client Management
 ```
 
 ---
 
-## 🚀 Deployment: Vercel (Recommended)
+## 🚀 Step-by-Step Deployment Guide
 
-### Step 1: Configure DNS (Namecheap/Cloudflare)
+### Step 1: Configure DNS Records
 
-Add the following DNS records:
+In your DNS provider (Namecheap, Cloudflare, etc.), add these records:
 
 ```
-Type    Name        Value                   TTL
-A       @           76.76.21.21            Automatic
-CNAME   app         cname.vercel-dns.com   Automatic
-CNAME   employee    cname.vercel-dns.com   Automatic
-CNAME   www         streamsuite.io         Automatic
+Type    Name      Value                   TTL
+A       @         76.76.21.21            Auto (Vercel's IP)
+CNAME   app       cname.vercel-dns.com   Auto
+CNAME   agency    cname.vercel-dns.com   Auto
+CNAME   www       streamsuite.io         Auto (optional redirect)
 ```
 
-### Step 2: Create `vercel.json` for Routing
+**Note**: After adding DNS records, propagation can take 24-48 hours
 
-```json
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html",
-      "has": [
-        {
-          "type": "host",
-          "value": "app.streamsuite.io"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html",
-      "has": [
-        {
-          "type": "host",
-          "value": "employee.streamsuite.io"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ]
-}
+### Step 2: Create `vercel.json` Configuration
+
+**Already configured!** The existing `vercel.json` handles SPA routing for all domains.
+
+All routes serve `/index.html`, then React Router + domain detection handles the rest.
+
+### Step 3: App Routing Structure
+
+**Current implementation** in [src/App.tsx](src/App.tsx) already supports domain-based routing:
+
+```
+streamsuite.io routes:
+  / → Landing page
+  /pricing → Pricing page
+  /login → Login
+  /signup → Sign up
+
+app.streamsuite.io routes:
+  /app → Dashboard (protected)
+    ├── / → Generator
+    ├── /templates → Templates
+    ├── /converter → Converter
+    ├── /debugger → Debugger
+    ├── /batch → Batch Generator
+    ├── /monitoring → n8n Monitoring
+    ├── /history → History
+    ├── /settings → Settings
+    └── /admin → Admin Panel
+
+agency.streamsuite.io routes:
+  /agency → Agency Dashboard (protected, agency-only)
+  /agency/client/:id → Client Profile
+  /agency/client/:id/workflows → Client Workflows
+  /agency/generator → Agency Generator
+  /agency/debugger → Agency Debugger
+  /agency/batch → Agency Batch Generator
+  /agency/api-docs → API Documentation
+  /agency/docs → Agency Documentation
 ```
 
-### Step 3: Update `App.tsx` with Subdomain Routing
-
-```typescript
-// src/App.tsx
-
-import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
-// Marketing pages (streamsuite.io)
-import Landing from '@/pages/marketing/Landing';
-import Pricing from '@/pages/Pricing';
-
-// App pages (app.streamsuite.io)
-import Dashboard from '@/pages/Dashboard';
-import Generator from '@/pages/Generator';
-import Converter from '@/pages/Converter';
-import Debugger from '@/pages/Debugger';
-import History from '@/pages/History';
-import Settings from '@/pages/Settings';
-import Templates from '@/pages/Templates';
-import Login from '@/pages/Login';
-
-// Admin pages (employee.streamsuite.io)
-import Admin from '@/pages/Admin';
-
-// Auth
-import { AuthProvider } from '@/hooks/useAuth';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-
-type SubdomainType = 'marketing' | 'app' | 'employee' | 'agency';
-
-function getSubdomain(): SubdomainType {
-  const hostname = window.location.hostname;
-
-  // Development
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    // Check URL params for subdomain testing
-    const params = new URLSearchParams(window.location.search);
-    const subdomain = params.get('subdomain');
-    if (subdomain === 'employee') return 'employee';
-    if (subdomain === 'agency') return 'agency';
-    return 'app'; // Default to app in dev
-  }
-
-  // Production
-  if (hostname === 'streamsuite.io' || hostname === 'www.streamsuite.io') {
-    return 'marketing';
-  }
-  if (hostname === 'app.streamsuite.io') {
-    return 'app';
-  }
-  if (hostname === 'employee.streamsuite.io') {
-    return 'employee';
-  }
-  if (hostname === 'agency.streamsuite.io') {
-    return 'agency';
-  }
-
-  // Default
-  return 'marketing';
-}
-
-function App() {
-  const [subdomain, setSubdomain] = useState<SubdomainType>(getSubdomain());
-
-  useEffect(() => {
-    setSubdomain(getSubdomain());
-  }, []);
-
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        {subdomain === 'marketing' && (
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        )}
-
-        {subdomain === 'app' && (
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
-              <Route index element={<Generator />} />
-              <Route path="converter" element={<Converter />} />
-              <Route path="debugger" element={<Debugger />} />
-              <Route path="history" element={<History />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="templates" element={<Templates />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        )}
-
-        {subdomain === 'employee' && (
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        )}
-
-        {subdomain === 'agency' && (
-          <Routes>
-            <Route path="/" element={<div>Agency Portal (Coming Soon)</div>} />
-          </Routes>
-        )}
-      </BrowserRouter>
-    </AuthProvider>
-  );
-}
-
-export default App;
-```
+**The routing works like this:**
+1. User visits any of the 3 domains
+2. All domains serve the same `index.html` (from Vercel)
+3. React app loads and checks `window.location.hostname`
+4. Based on domain, shows appropriate routes
+5. Users can navigate between domains via links
 
 ### Step 4: Deploy to Vercel
+
+#### Via Vercel Dashboard (Recommended):
+
+1. **Connect GitHub Repository**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "Add New Project"
+   - Import your GitHub repository
+   - Vercel auto-detects Vite configuration
+
+2. **Configure Build Settings** (auto-detected):
+   - Framework: Vite
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+
+3. **Add Environment Variables**:
+   - Go to Project Settings → Environment Variables
+   - Add all variables from `.env.example`:
+     ```
+     VITE_SUPABASE_URL
+     VITE_SUPABASE_ANON_KEY
+     VITE_CLAUDE_API_KEY
+     VITE_OPENAI_API_KEY
+     VITE_STRIPE_PUBLIC_KEY
+     VITE_APP_URL=https://app.streamsuite.io
+     VITE_APP_NAME=StreamSuite
+     ```
+
+4. **Add All 3 Domains**:
+   - Go to Project Settings → Domains
+   - Add `streamsuite.io` (primary)
+   - Add `app.streamsuite.io`
+   - Add `agency.streamsuite.io`
+   - Add `www.streamsuite.io` (optional, redirects to streamsuite.io)
+
+5. **Deploy**:
+   - Click "Deploy"
+   - Wait for build to complete (~2-3 minutes)
+   - SSL certificates are automatically provisioned
+
+#### Via Vercel CLI (Alternative):
 
 ```bash
 # Install Vercel CLI
 npm i -g vercel
 
-# Login
+# Login to Vercel
 vercel login
 
-# Deploy
+# Deploy to production
 vercel --prod
-
-# Add domains in Vercel dashboard:
-# 1. Go to Project Settings > Domains
-# 2. Add streamsuite.io (primary)
-# 3. Add app.streamsuite.io
-# 4. Add employee.streamsuite.io
-# 5. Add www.streamsuite.io (redirects to streamsuite.io)
 ```
 
 ---
 
-## 🔒 Security Considerations
+## 🔒 Supabase Configuration
 
-### 1. Admin Panel Protection (`employee.streamsuite.io`)
+### Step 5: Configure Supabase Auth & CORS
 
-```typescript
-// src/components/AdminRoute.tsx
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+In Supabase Dashboard → Authentication → URL Configuration:
 
-export function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, profile } = useAuth();
+**Site URL**: `https://streamsuite.io`
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Check if user is admin (add is_admin column to profiles table)
-  if (!profile?.is_admin) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
+**Redirect URLs** (add all):
+```
+https://streamsuite.io/*
+https://app.streamsuite.io/*
+https://agency.streamsuite.io/*
+http://localhost:5173/*
 ```
 
-### 2. Update Supabase Row Level Security
-
-```sql
--- Add is_admin column to profiles
-ALTER TABLE profiles
-ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
-
--- Only admins can access admin panel
-CREATE POLICY "Only admins can view all profiles"
-ON profiles FOR SELECT
-USING (
-  auth.uid() = id OR
-  (SELECT is_admin FROM profiles WHERE id = auth.uid())
-);
+**Additional Redirect URLs** (for OAuth providers if using):
+```
+https://streamsuite.io/auth/callback
+https://app.streamsuite.io/auth/callback
+https://agency.streamsuite.io/auth/callback
 ```
 
-### 3. Environment Variables
+### Step 6: Configure CORS Origins
 
-```env
-# .env.production
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_CLAUDE_API_KEY=your-claude-key
-VITE_STRIPE_PUBLIC_KEY=your-stripe-key
+In Supabase Dashboard → Settings → API:
 
-# Subdomain configuration
-VITE_MARKETING_DOMAIN=streamsuite.io
-VITE_APP_DOMAIN=app.streamsuite.io
-VITE_ADMIN_DOMAIN=employee.streamsuite.io
-VITE_AGENCY_DOMAIN=agency.streamsuite.io
+**Allowed origins**:
+```
+https://streamsuite.io
+https://app.streamsuite.io
+https://agency.streamsuite.io
+http://localhost:5173
 ```
 
 ---
 
-## 🧪 Testing Subdomains Locally
+## 🧪 Testing Locally
 
-### Option 1: URL Parameters (Easiest)
-
-```
-http://localhost:5173/?subdomain=app       # App subdomain
-http://localhost:5173/?subdomain=employee  # Admin subdomain
-http://localhost:5173/                     # Marketing (default)
-```
-
-### Option 2: Local Host Aliases
+During development, all 3 domains run on `localhost:5173`:
 
 ```bash
-# Add to /etc/hosts (macOS/Linux)
-127.0.0.1   local.streamsuite.io
-127.0.0.1   app.local.streamsuite.io
-127.0.0.1   employee.local.streamsuite.io
-
-# Access via:
-http://local.streamsuite.io:5173          # Marketing
-http://app.local.streamsuite.io:5173      # App
-http://employee.local.streamsuite.io:5173 # Admin
+npm run dev
 ```
 
-### Option 3: Vite Proxy (Advanced)
+### Test Domain-Specific Behavior:
 
+**Option 1: Modify App.tsx Temporarily**
 ```typescript
-// vite.config.ts
-export default defineConfig({
-  server: {
-    host: true,
-    port: 5173,
-    proxy: {
-      // Proxy subdomain requests
-    }
-  }
-});
-```
-
----
-
-## 📊 Subdomain Redirects & SEO
-
-### WWW Redirect
-
-In Vercel dashboard:
-- Add `www.streamsuite.io` as a domain
-- Set it to redirect to `streamsuite.io` (301 permanent)
-
-### Cross-Subdomain Navigation
-
-```typescript
-// Helper function for cross-subdomain links
-export function getSubdomainUrl(subdomain: 'marketing' | 'app' | 'employee' | 'agency', path: string = '/') {
-  const isDev = window.location.hostname === 'localhost';
-
-  if (isDev) {
-    return `${window.location.origin}${path}?subdomain=${subdomain}`;
-  }
-
-  const domains = {
-    marketing: 'streamsuite.io',
-    app: 'app.streamsuite.io',
-    employee: 'employee.streamsuite.io',
-    agency: 'agency.streamsuite.io'
-  };
-
-  return `https://${domains[subdomain]}${path}`;
+// Force specific domain for testing
+function getHostname() {
+  return 'agency.streamsuite.io'; // Test agency routes
+  // return 'app.streamsuite.io'; // Test app routes
+  // return 'streamsuite.io'; // Test marketing routes
 }
-
-// Usage:
-<a href={getSubdomainUrl('app', '/')}>Go to App</a>
-<a href={getSubdomainUrl('marketing', '/pricing')}>View Pricing</a>
 ```
 
----
+**Option 2: Local Hosts File** (Windows: `C:\Windows\System32\drivers\etc\hosts`):
+```
+127.0.0.1 local.streamsuite.io
+127.0.0.1 app.local.streamsuite.io
+127.0.0.1 agency.local.streamsuite.io
+```
 
-## 🚀 Deployment Checklist
-
-- [ ] DNS records configured (A + CNAME)
-- [ ] Domains added in Vercel dashboard
-- [ ] SSL certificates provisioned (automatic via Vercel)
-- [ ] Environment variables set in Vercel
-- [ ] `vercel.json` configured for routing
-- [ ] Subdomain detection working in `App.tsx`
-- [ ] Admin protection enabled (`is_admin` RLS)
-- [ ] WWW redirect configured
-- [ ] Test all subdomains in production
-- [ ] Analytics configured per subdomain (optional)
+Then access:
+- `http://local.streamsuite.io:5173` → Marketing
+- `http://app.local.streamsuite.io:5173` → App
+- `http://agency.local.streamsuite.io:5173` → Agency
 
 ---
 
-## 📈 Future: Agency Subdomain
+## 🔐 Authentication Flow
 
-When launching the Agency plan:
+### Login Flow Across Domains:
 
-1. Add DNS record: `CNAME agency cname.vercel-dns.com`
-2. Add domain in Vercel: `agency.streamsuite.io`
-3. Create agency-specific pages in `src/pages/agency/`
-4. Update `App.tsx` to handle `agency` subdomain
-5. Implement team workspace features
+1. User visits **streamsuite.io** → clicks "Sign In"
+2. User logs in at **streamsuite.io/login**
+3. After successful login:
+   - **Regular users** → redirect to `https://app.streamsuite.io/app`
+   - **Agency users** → redirect to `https://agency.streamsuite.io/agency`
+   - **Admin users** → can access `https://app.streamsuite.io/app/admin`
+
+### Logout Flow:
+
+1. User clicks logout from any domain
+2. Supabase clears session (works across all domains via CORS)
+3. User redirected to `https://streamsuite.io`
+
+### Cross-Domain Session Management:
+
+Supabase handles this automatically:
+- Sessions stored in `localStorage` (shared across subdomains)
+- CORS configured to allow authentication across all 3 domains
+- Users stay logged in when navigating between app ↔ agency
+
+---
+
+## 🚀 Complete Deployment Checklist
+
+### Pre-Deployment:
+- [x] Landing page created
+- [x] Logo replaced with S3 image
+- [x] Subscription plans configured
+- [ ] Update `.env` with production values
+- [ ] Test login/logout flow locally
+- [ ] Verify Stripe checkout redirects work
+- [ ] Test all protected routes
+
+### Vercel Setup:
+- [ ] Create Vercel project
+- [ ] Connect GitHub repository
+- [ ] Add environment variables
+- [ ] Add all 3 domains (streamsuite.io, app.streamsuite.io, agency.streamsuite.io)
+- [ ] Verify SSL/HTTPS is enabled (automatic)
+- [ ] Deploy to production
+
+### Supabase Setup:
+- [ ] Add all redirect URLs to auth config
+- [ ] Configure CORS origins
+- [ ] Deploy edge functions:
+  - [ ] `stripe-checkout`
+  - [ ] `stripe-webhook`
+  - [ ] `stripe-portal`
+  - [ ] `n8n-proxy` (if using n8n monitoring)
+  - [ ] `make-proxy` (if using Make integration)
+- [ ] Test edge function access from all domains
+
+### DNS Configuration:
+- [ ] Point `streamsuite.io` A record to Vercel
+- [ ] Point `app.streamsuite.io` CNAME to Vercel
+- [ ] Point `agency.streamsuite.io` CNAME to Vercel
+- [ ] Configure `www.streamsuite.io` redirect (optional)
+- [ ] Wait for DNS propagation (24-48 hours)
+
+### Stripe Setup:
+- [ ] Create Stripe account
+- [ ] Create 4 products (Starter, Pro, Growth, Agency)
+- [ ] Add monthly + yearly prices for each
+- [ ] Copy price IDs to Vercel environment variables
+- [ ] Configure webhook URL: `https://your-project.supabase.co/functions/v1/stripe-webhook`
+- [ ] Add webhook events: `checkout.session.completed`, `invoice.payment_succeeded`, etc.
+- [ ] Create promo code: `HUNT50` (50% off first month)
+- [ ] Update success URLs to `https://app.streamsuite.io/app/settings?success=true`
+- [ ] Update cancel URLs to `https://app.streamsuite.io/app/settings?canceled=true`
+
+### Post-Deployment Testing:
+- [ ] Visit streamsuite.io → verify landing page loads
+- [ ] Sign up new user → verify redirect to app.streamsuite.io
+- [ ] Test workflow generation (costs 1 credit)
+- [ ] Test subscription purchase with test card
+- [ ] Test agency dashboard access (for agency users)
+- [ ] Test navigation between all 3 domains
+- [ ] Verify logout → redirect to streamsuite.io
+- [ ] Test on mobile devices
+- [ ] Check page load times (<3 seconds)
+
+---
+
+## 🔧 Navigation Between Domains
+
+### From Marketing to App:
+After successful login, redirect user based on tier:
+
+```typescript
+// In Login.tsx after successful authentication
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('subscription_tier')
+  .eq('id', user.id)
+  .single();
+
+if (profile?.subscription_tier === 'agency') {
+  window.location.href = 'https://agency.streamsuite.io/agency';
+} else {
+  window.location.href = 'https://app.streamsuite.io/app';
+}
+```
+
+### From App to Agency:
+In Dashboard sidebar, conditionally show agency link:
+
+```typescript
+{profile?.subscription_tier === 'agency' && (
+  <a href="https://agency.streamsuite.io/agency" className="nav-link">
+    Agency Dashboard
+  </a>
+)}
+```
+
+### From Any Domain to Marketing:
+On logout:
+
+```typescript
+await supabase.auth.signOut();
+window.location.href = 'https://streamsuite.io';
+```
 
 ---
 
 ## 🆘 Troubleshooting
 
-### "Domain not found" error
-- Check DNS propagation: https://dnschecker.org
-- Verify Vercel domain configuration
-- Wait 24-48 hours for full DNS propagation
+### Issue: "Domain not found" error
+**Solution**:
+- Check DNS propagation at [dnschecker.org](https://dnschecker.org)
+- Verify domains are added in Vercel dashboard
+- Wait 24-48 hours for full propagation
 
-### Subdomain not routing correctly
-- Check `getSubdomain()` function in `App.tsx`
-- Verify `vercel.json` rewrite rules
-- Test with `?subdomain=` parameter locally
+### Issue: Session not persisting across domains
+**Solution**:
+- Verify CORS configuration in Supabase
+- Check redirect URLs include all 3 domains
+- Ensure `localStorage` is enabled in browser
 
-### Admin panel accessible to non-admins
-- Verify Supabase RLS policies
-- Check `is_admin` column in profiles table
-- Ensure `AdminRoute` component is used
+### Issue: Login redirects to wrong domain
+**Solution**:
+- Check environment variables (`VITE_APP_URL`)
+- Verify redirect logic in Login.tsx
+- Test with different user tiers
+
+### Issue: Stripe checkout redirecting to wrong URL
+**Solution**:
+- Update `success_url` in stripe-checkout edge function
+- Use `https://app.streamsuite.io/app/settings?success=true`
+- Not `http://localhost:5173/settings`
+
+### Issue: Agency features showing for non-agency users
+**Solution**:
+- Verify `ProtectedRoute` has `agencyOnly` prop
+- Check user's `subscription_tier` in database
+- Ensure RLS policies are correct
 
 ---
 
-## 💡 Recommended Setup (MVP)
+## 🎯 Summary
 
-For your MVP launch, I recommend:
+Your 3-domain architecture is **production-ready**:
 
-1. **Start with single Vercel deployment** (all subdomains in one project)
-2. **Use subdomain routing in `App.tsx`** (as shown above)
-3. **Only worry about 3 subdomains initially:**
-   - `streamsuite.io` - Marketing + Pricing
-   - `app.streamsuite.io` - Main application
-   - `employee.streamsuite.io` - Admin panel
-4. **Add `agency.streamsuite.io` later** when launching Agency tier
+✅ **streamsuite.io** - Marketing site with landing page, pricing, auth
+✅ **app.streamsuite.io** - Full application with all user features
+✅ **agency.streamsuite.io** - Agency portal for team features
 
-This keeps deployment simple while maintaining the subdomain architecture you want.
+**Next Steps**:
+1. Follow the deployment checklist above
+2. Deploy to Vercel (5-10 minutes)
+3. Configure DNS records (2-5 minutes, 24-48 hours to propagate)
+4. Set up Stripe products and webhooks (15-20 minutes)
+5. Test end-to-end flows
+6. Launch! 🚀

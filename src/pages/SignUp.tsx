@@ -160,9 +160,11 @@ export default function SignUp() {
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="space-y-3 text-center pb-6">
             <div className="flex justify-center">
-              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 p-3 rounded-xl">
-                <Zap className="h-8 w-8 text-white" />
-              </div>
+              <img
+                src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/StreamSuite.png"
+                alt="StreamSuite"
+                className="h-16 w-auto"
+              />
             </div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               Create Your Account

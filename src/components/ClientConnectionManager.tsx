@@ -44,8 +44,11 @@ import {
   Loader2,
   Link as LinkIcon,
   AlertCircle,
+  ExternalLink,
+  Workflow,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import {
   getClientConnections,
   createClientConnection,
@@ -62,6 +65,7 @@ interface ClientConnectionManagerProps {
 
 export function ClientConnectionManager({ clientId, clientName }: ClientConnectionManagerProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [connections, setConnections] = useState<ClientPlatformConnection[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
@@ -78,8 +82,10 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
     // Make
     make_api_key: '',
     make_team_id: '',
+    make_instance_url: '',
     // Zapier
     zapier_api_key: '',
+    zapier_instance_url: '',
   });
 
   useEffect(() => {
@@ -115,6 +121,7 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
         ...(form.platform === 'make' && {
           make_api_key: form.make_api_key,
           make_team_id: form.make_team_id,
+          make_instance_url: form.make_instance_url,
         }),
         ...(form.platform === 'zapier' && {
           zapier_api_key: form.zapier_api_key,
@@ -151,6 +158,7 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
         ...(form.platform === 'make' && {
           make_api_key: form.make_api_key,
           make_team_id: form.make_team_id,
+          make_instance_url: form.make_instance_url,
         }),
         ...(form.platform === 'zapier' && {
           zapier_api_key: form.zapier_api_key,
@@ -224,7 +232,9 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
       n8n_api_key: '',
       make_api_key: '',
       make_team_id: '',
+      make_instance_url: '',
       zapier_api_key: '',
+      zapier_instance_url: '',
     });
   };
 
@@ -243,7 +253,9 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
       n8n_api_key: connection.n8n_api_key || '',
       make_api_key: connection.make_api_key || '',
       make_team_id: connection.make_team_id || '',
+      make_instance_url: connection.make_instance_url || '',
       zapier_api_key: connection.zapier_api_key || '',
+      zapier_instance_url: connection.zapier_instance_url || '',
     });
     setShowDialog(true);
   };
@@ -305,8 +317,14 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {connection.platform === 'n8n' && connection.n8n_instance_url}
-                        {connection.platform === 'make' && connection.make_team_id && `Team: ${connection.make_team_id}`}
-                        {connection.platform === 'zapier' && 'Zapier Account'}
+                        {connection.platform === 'make' && (
+                          connection.make_instance_url || (connection.make_team_id && `Team: ${connection.make_team_id}`) || 'Make.com Account'
+                        )}
+                        {connection.platform === 'zapier' && (
+                          connection.zapier_instance_url
+                            ? `Workspace: ${new URL(connection.zapier_instance_url).pathname.split('/').pop() || 'home'}`
+                            : 'Zapier Account'
+                        )}
                       </div>
                       {connection.last_tested_at && (
                         <div className="flex items-center gap-2 mt-1 text-xs">
@@ -323,6 +341,17 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* View Workflows Button (appears for all platforms) */}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => navigate(`/agency/client/${clientId}/workflows`)}
+                      className="gap-2"
+                    >
+                      <Workflow className="h-4 w-4" />
+                      View Workflows
+                    </Button>
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -429,6 +458,19 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
             {form.platform === 'make' && (
               <>
                 <div>
+                  <Label htmlFor="make_instance_url">Make.com Instance URL *</Label>
+                  <Input
+                    id="make_instance_url"
+                    type="url"
+                    value={form.make_instance_url}
+                    onChange={(e) => setForm({ ...form, make_instance_url: e.target.value })}
+                    placeholder="https://us1.make.com/organization/123/scenarios"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Your client's Make.com workspace URL. Navigate to their scenarios page and copy the URL.
+                  </p>
+                </div>
+                <div>
                   <Label htmlFor="make_api_key">Make.com API Key *</Label>
                   <Input
                     id="make_api_key"
@@ -451,27 +493,104 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
             )}
 
             {form.platform === 'zapier' && (
-              <div>
-                <Label htmlFor="zapier_api_key">Zapier API Key *</Label>
-                <Input
-                  id="zapier_api_key"
-                  type="password"
-                  value={form.zapier_api_key}
-                  onChange={(e) => setForm({ ...form, zapier_api_key: e.target.value })}
-                  placeholder="Your Zapier API key"
-                />
+              <>
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-300">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-yellow-800 dark:text-yellow-300">
+                      <p className="font-semibold mb-1">⚠️ Limited Zapier Support</p>
+                      <p>
+                        Zapier does NOT provide a public API for managing workflows. We can only
+                        generate code snippets and setup guides. We CANNOT:
+                      </p>
+                      <ul className="list-disc list-inside mt-1 space-y-0.5">
+                        <li>List or view your Zaps programmatically</li>
+                        <li>Monitor Zap executions via API</li>
+                        <li>Create or modify Zaps through automation</li>
+                      </ul>
+                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200">
+                        <p className="font-semibold text-blue-800 dark:text-blue-200">✨ Workaround Available:</p>
+                        <p className="mt-1 text-blue-700 dark:text-blue-300">
+                          After creating this connection, you can click <strong>"Open Zapier"</strong> to
+                          access your client's Zapier dashboard in an embedded browser within StreamSuite.
+                        </p>
+                      </div>
+                      <p className="mt-2">
+                        <strong>Best Practice:</strong> Use n8n or Make.com for full API-based agency
+                        management.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="zapier_instance_url">
+                    Client Zapier Workspace URL *
+                  </Label>
+                  <Input
+                    id="zapier_instance_url"
+                    type="url"
+                    value={form.zapier_instance_url}
+                    onChange={(e) => setForm({ ...form, zapier_instance_url: e.target.value })}
+                    placeholder="https://zapier.com/app/home?conversationId=xxx"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    The client-specific Zapier workspace URL. When you log into the client's Zapier
+                    account, copy the URL from their dashboard (e.g., https://zapier.com/app/home?conversationId=bdd6c6bb...).
+                    This ensures "Open Zapier" takes you to the correct workspace.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="zapier_api_key">Zapier API Key (Optional)</Label>
+                  <Input
+                    id="zapier_api_key"
+                    type="password"
+                    value={form.zapier_api_key}
+                    onChange={(e) => setForm({ ...form, zapier_api_key: e.target.value })}
+                    placeholder="Developer Platform API key (limited use)"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Only useful for Developer Platform integrations, NOT for managing client Zaps.
+                  </p>
+                </div>
+              </>
+            )}
+
+            {form.platform === 'n8n' && (
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    <strong>✅ Full Support:</strong> List workflows, monitor executions, create/update
+                    workflows, view credentials, audit logs. Optional embedding available with commercial
+                    license.
+                  </p>
+                </div>
               </div>
             )}
 
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  API credentials are encrypted and stored securely. They're only used to fetch
-                  workflows and monitor executions for this client.
-                </p>
+            {form.platform === 'make' && (
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    <strong>✅ Full Support:</strong> List scenarios, monitor usage, create/update
+                    scenarios, run on-demand, track operations/data/credits (last 30 days).
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {form.platform !== 'zapier' && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    API credentials are encrypted and stored securely. They're only used to fetch
+                    workflows and monitor executions for this client.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
@@ -482,8 +601,9 @@ export function ClientConnectionManager({ clientId, clientName }: ClientConnecti
               disabled={
                 !form.connection_name ||
                 (form.platform === 'n8n' && (!form.n8n_instance_url || !form.n8n_api_key)) ||
-                (form.platform === 'make' && !form.make_api_key) ||
-                (form.platform === 'zapier' && !form.zapier_api_key)
+                (form.platform === 'make' && (!form.make_api_key || !form.make_instance_url)) ||
+                (form.platform === 'zapier' && !form.zapier_instance_url)
+                // Zapier: Instance URL required, API key optional
               }
             >
               {editingConnection ? 'Update' : 'Create'}

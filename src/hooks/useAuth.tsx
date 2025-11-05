@@ -109,6 +109,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
+
+      // Redirect to marketing domain after logout
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isDev) {
+        window.location.href = window.location.origin; // Stay on localhost
+      } else {
+        const marketingDomain = import.meta.env.VITE_MARKETING_DOMAIN || 'https://streamsuite.io';
+        window.location.href = marketingDomain;
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",

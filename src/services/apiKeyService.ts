@@ -78,6 +78,28 @@ export async function getAPIKeys(): Promise<APIKey[]> {
  * Create a new API key
  * Returns the plain key ONCE - it cannot be retrieved again
  */
+/**
+ * Available API permissions
+ */
+export const API_PERMISSIONS = {
+  WORKFLOW_READ: 'workflow:read',
+  WORKFLOW_CREATE: 'workflow:create',
+  WORKFLOW_UPDATE: 'workflow:update',
+  WORKFLOW_DELETE: 'workflow:delete',
+  WORKFLOW_GENERATE: 'workflow:generate', // AI generation
+  CLIENT_READ: 'client:read',
+  CLIENT_MANAGE: 'client:manage',
+  ALL: '*', // Full access
+} as const;
+
+export const DEFAULT_PERMISSIONS = [
+  API_PERMISSIONS.WORKFLOW_READ,
+  API_PERMISSIONS.WORKFLOW_CREATE,
+  API_PERMISSIONS.WORKFLOW_UPDATE,
+  API_PERMISSIONS.WORKFLOW_DELETE,
+  API_PERMISSIONS.WORKFLOW_GENERATE,
+];
+
 export async function createAPIKey(params: {
   name: string;
   permissions?: string[];
@@ -101,8 +123,8 @@ export async function createAPIKey(params: {
       name: params.name,
       key_hash: hash,
       key_prefix: prefix,
-      permissions: params.permissions || ['workflow_generation'],
-      rate_limit_per_minute: params.rate_limit_per_minute || 10,
+      permissions: params.permissions || DEFAULT_PERMISSIONS,
+      rate_limit_per_minute: params.rate_limit_per_minute || 60,
       expires_at: params.expires_at?.toISOString(),
       is_active: true,
     })

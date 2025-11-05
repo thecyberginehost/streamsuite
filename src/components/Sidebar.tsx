@@ -152,9 +152,11 @@ export function Sidebar() {
           {/* Logo */}
           <div className="flex items-center flex-shrink-0 px-4 h-14 border-b border-gray-200/80 dark:border-gray-800/50">
             <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-1.5 rounded-md">
-                <Zap className="h-4 w-4 text-white" />
-              </div>
+              <img
+                src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/StreamSuite.png"
+                alt="StreamSuite"
+                className="h-10 w-auto"
+              />
               <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">StreamSuite</span>
             </div>
           </div>

@@ -8,11 +8,64 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Zap, Mail, Lock } from 'lucide-react';
+
+/**
+ * Get the appropriate domain URL based on environment
+ */
+function getDomainUrl(domain: 'marketing' | 'app' | 'agency'): string {
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  if (isDev) {
+    return window.location.origin; // Use localhost for development
+  }
+
+  // Production domains from env vars
+  const domains = {
+    marketing: import.meta.env.VITE_MARKETING_DOMAIN || 'https://streamsuite.io',
+    app: import.meta.env.VITE_APP_DOMAIN || 'https://app.streamsuite.io',
+    agency: import.meta.env.VITE_AGENCY_DOMAIN || 'https://agency.streamsuite.io'
+  };
+
+  return domains[domain];
+}
+
+/**
+ * Redirect user to appropriate domain based on subscription tier
+ */
+async function redirectAfterLogin(userId: string) {
+  try {
+    // Fetch user's profile to determine subscription tier
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      // Default to app domain if profile fetch fails
+      window.location.href = `${getDomainUrl('app')}/app`;
+      return;
+    }
+
+    // Redirect based on tier
+    if (profile?.subscription_tier === 'agency') {
+      window.location.href = `${getDomainUrl('agency')}/agency`;
+    } else {
+      window.location.href = `${getDomainUrl('app')}/app`;
+    }
+  } catch (err) {
+    console.error('Error in redirectAfterLogin:', err);
+    // Fallback to app domain
+    window.location.href = `${getDomainUrl('app')}/app`;
+  }
+}
 
 export default function Login() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -25,9 +78,9 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/');
+      redirectAfterLogin(user.id);
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +89,8 @@ export default function Login() {
     try {
       if (mode === 'signin') {
         const { error } = await signIn(email, password);
-        if (!error) {
-          navigate('/');
+        if (!error && user) {
+          await redirectAfterLogin(user.id);
         }
       } else {
         const { error } = await signUp(email, password);
@@ -54,9 +107,11 @@ export default function Login() {
         <CardHeader className="space-y-3 text-center pb-6">
           {/* Logo */}
           <div className="flex justify-center">
-            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 p-3 rounded-xl">
-              <Zap className="h-8 w-8 text-white" />
-            </div>
+            <img
+              src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/StreamSuite.png"
+              alt="StreamSuite"
+              className="h-16 w-auto"
+            />
           </div>
 
           {/* Title */}

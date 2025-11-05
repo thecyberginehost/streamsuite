@@ -346,6 +346,58 @@ export async function getUserAuditLogs(
 }
 
 /**
+ * Get ALL audit logs across all users (admin only - for aggregated view)
+ */
+export async function getAllAuditLogs(
+  limit = 1000,
+  offset = 0,
+  filters?: {
+    severity?: string;
+    eventType?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+): Promise<any[]> {
+  let query = supabase
+    .from('audit_logs')
+    .select(`
+      *,
+      profiles:user_id (
+        email,
+        full_name
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  // Apply filters if provided
+  if (filters?.severity) {
+    query = query.eq('threat_severity', filters.severity);
+  }
+
+  if (filters?.eventType) {
+    query = query.eq('action_type', filters.eventType);
+  }
+
+  if (filters?.startDate) {
+    query = query.gte('created_at', filters.startDate);
+  }
+
+  if (filters?.endDate) {
+    query = query.lte('created_at', filters.endDate);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('[AuditService] Failed to fetch all audit logs:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
  * Export user audit logs as CSV (admin only)
  */
 export async function exportAuditLogsCSV(userId: string, userEmail: string): Promise<void> {
@@ -406,6 +458,88 @@ export async function exportAuditLogsCSV(userId: string, userEmail: string): Pro
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error('[AuditService] Failed to export CSV:', error);
+    throw error;
+  }
+}
+
+/**
+ * Export ALL audit logs across all users as CSV (admin only)
+ */
+export async function exportAllAuditLogsCSV(filters?: {
+  severity?: string;
+  eventType?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<void> {
+  try {
+    // Fetch all logs (up to 5000 for performance)
+    const logs = await getAllAuditLogs(5000, 0, filters);
+
+    if (logs.length === 0) {
+      throw new Error('No audit logs found');
+    }
+
+    // Build CSV content with user information
+    const headers = [
+      'User ID',
+      'User Email',
+      'User Name',
+      'Event ID',
+      'Timestamp',
+      'Action Type',
+      'Status',
+      'Credits Used',
+      'IP Address',
+      'Location',
+      'User Agent',
+      'Threat Detected',
+      'Threat Type',
+      'Threat Severity',
+      'Details'
+    ];
+
+    const rows = logs.map(log => [
+      log.user_id,
+      (log.profiles as any)?.email || 'N/A',
+      (log.profiles as any)?.full_name || 'N/A',
+      log.event_id || 'N/A',
+      new Date(log.created_at).toISOString(),
+      log.action_type,
+      log.action_status,
+      log.credits_used || 0,
+      log.ip_address || 'N/A',
+      log.geolocation ? `${log.geolocation.city}, ${log.geolocation.country}` : 'N/A',
+      log.user_agent || 'N/A',
+      log.threat_detected ? 'Yes' : 'No',
+      log.threat_type || 'N/A',
+      log.threat_severity || 'N/A',
+      JSON.stringify(log.action_details || {})
+    ]);
+
+    // Convert to CSV format
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Create and download blob
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Generate filename with filters applied
+    let filename = `all-audit-logs-${new Date().toISOString().split('T')[0]}`;
+    if (filters?.severity) filename += `-severity-${filters.severity}`;
+    if (filters?.eventType) filename += `-type-${filters.eventType}`;
+    link.download = `${filename}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('[AuditService] Failed to export all logs CSV:', error);
     throw error;
   }
 }

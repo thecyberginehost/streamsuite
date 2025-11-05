@@ -44,6 +44,12 @@ import {
   Check,
   AlertCircle,
   Search,
+  BookOpen,
+  Loader2,
+  User,
+  LogOut,
+  CreditCard,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -65,6 +71,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Services
 import {
@@ -82,6 +96,8 @@ import {
   updateAPIKey,
   type APIKey,
 } from "@/services/apiKeyService";
+import { isAdmin } from "@/services/adminService";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AgencyDashboard() {
   const { profile } = useProfile();
@@ -91,9 +107,11 @@ export default function AgencyDashboard() {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [clients, setClients] = useState<Client[]>([]);
+  const [clientStats, setClientStats] = useState<Record<string, { totalConnections: number; totalWorkflows: number }>>({});
   const [apiKeys, setAPIKeys] = useState<APIKey[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   // Client dialog state
   const [showClientDialog, setShowClientDialog] = useState(false);
@@ -116,12 +134,29 @@ export default function AgencyDashboard() {
   const creditsRemaining = balance?.credits_remaining || 750;
   const batchCreditsRemaining = balance?.batch_credits_remaining || 50;
 
+  // Check admin status on mount
+  useEffect(() => {
+    checkAdminStatus();
+  }, []);
+
+  const checkAdminStatus = async () => {
+    try {
+      const adminStatus = await isAdmin();
+      setIsUserAdmin(adminStatus);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsUserAdmin(false);
+    }
+  };
+
   // Load data
   useEffect(() => {
     if (activeTab === "clients") {
       loadClients();
     } else if (activeTab === "api-keys") {
       loadAPIKeys();
+    } else if (activeTab === "workflows") {
+      loadClients(); // Load clients for workflow management
     }
   }, [activeTab]);
 
@@ -130,6 +165,21 @@ export default function AgencyDashboard() {
       setLoading(true);
       const data = await getClients();
       setClients(data);
+
+      // Load stats for each client
+      const stats: Record<string, { totalConnections: number; totalWorkflows: number }> = {};
+      for (const client of data) {
+        try {
+          const clientStats = await getClientStats(client.id);
+          stats[client.id] = {
+            totalConnections: clientStats.totalConnections,
+            totalWorkflows: clientStats.totalWorkflows,
+          };
+        } catch (err) {
+          stats[client.id] = { totalConnections: 0, totalWorkflows: 0 };
+        }
+      }
+      setClientStats(stats);
     } catch (error) {
       console.error("Failed to load clients:", error);
       toast({
@@ -279,6 +329,19 @@ export default function AgencyDashboard() {
     });
   };
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     client.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -339,7 +402,7 @@ export default function AgencyDashboard() {
                   className="gap-2"
                 >
                   <Zap className="h-4 w-4" />
-                  Workflows
+                  Managed Workflows
                 </Button>
                 <Button
                   variant={activeTab === 'analytics' ? 'secondary' : 'ghost'}
@@ -350,6 +413,26 @@ export default function AgencyDashboard() {
                   <BarChart3 className="h-4 w-4" />
                   Analytics
                 </Button>
+                <Button
+                  variant='ghost'
+                  size="sm"
+                  onClick={() => navigate('/agency/docs')}
+                  className="gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Docs
+                </Button>
+                {isUserAdmin && (
+                  <Button
+                    variant='ghost'
+                    size="sm"
+                    onClick={() => navigate('/admin')}
+                    className="gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin Panel
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -376,9 +459,38 @@ export default function AgencyDashboard() {
                   <Crown className="h-3 w-3 mr-1" />
                   Agency
                 </Badge>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
-                  <Settings className="h-4 w-4" />
-                </Button>
+
+                {/* Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      <User className="h-4 w-4" />
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{profile?.full_name || 'User'}</span>
+                        <span className="text-xs text-gray-500 font-normal">{profile?.email}</span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/settings')}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/settings?tab=billing')}>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Billing
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
@@ -462,7 +574,7 @@ export default function AgencyDashboard() {
                   <Button
                     size="sm"
                     className="w-full"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/agency/generator')}
                   >
                     Generate Workflow
                   </Button>
@@ -537,11 +649,11 @@ export default function AgencyDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  <Button variant="outline" size="sm" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/')}>
+                  <Button variant="outline" size="sm" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/agency/generator')}>
                     <Sparkles className="h-5 w-5" />
                     <span className="text-xs">Generator</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/batch')}>
+                  <Button variant="outline" size="sm" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/agency/batch')}>
                     <Package className="h-5 w-5" />
                     <span className="text-xs">Batch</span>
                   </Button>
@@ -549,7 +661,7 @@ export default function AgencyDashboard() {
                     <FolderKanban className="h-5 w-5" />
                     <span className="text-xs">Templates</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/debugger')}>
+                  <Button variant="outline" size="sm" className="h-auto flex-col gap-2 py-4" onClick={() => navigate('/agency/debugger')}>
                     <Activity className="h-5 w-5" />
                     <span className="text-xs">Debugger</span>
                   </Button>
@@ -613,7 +725,11 @@ export default function AgencyDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredClients.map((client) => (
-                  <Card key={client.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <Card
+                    key={client.id}
+                    className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/agency/client/${client.id}`)}
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
@@ -622,7 +738,7 @@ export default function AgencyDashboard() {
                             <CardDescription className="text-sm truncate">{client.company}</CardDescription>
                           )}
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -661,6 +777,19 @@ export default function AgencyDashboard() {
                       {client.notes && (
                         <p className="text-xs text-gray-500 line-clamp-2">{client.notes}</p>
                       )}
+
+                      {/* Stats badges */}
+                      <div className="flex items-center gap-2 pt-2">
+                        <Badge variant="outline" className="text-xs">
+                          <Zap className="h-3 w-3 mr-1" />
+                          {clientStats[client.id]?.totalWorkflows || 0} workflows
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          <Activity className="h-3 w-3 mr-1" />
+                          {clientStats[client.id]?.totalConnections || 0} connections
+                        </Badge>
+                      </div>
+
                       <div className="pt-2 text-xs text-gray-400">
                         Added {new Date(client.created_at).toLocaleDateString()}
                       </div>
@@ -699,9 +828,14 @@ export default function AgencyDashboard() {
                       API Documentation
                     </p>
                     <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                      Use API keys to generate workflows programmatically. View our API docs for integration details.
+                      Use API keys to create, read, update, and delete workflows programmatically. View our API docs for integration details.
                     </p>
-                    <Button variant="link" size="sm" className="text-blue-600 p-0 h-auto mt-2">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-blue-600 p-0 h-auto mt-2"
+                      onClick={() => navigate('/agency/api-docs')}
+                    >
                       View API Documentation →
                     </Button>
                   </div>
@@ -779,19 +913,116 @@ export default function AgencyDashboard() {
           </div>
         )}
 
-        {/* Workflows Tab */}
+        {/* Managed Workflows Tab */}
         {activeTab === 'workflows' && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Sparkles className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Access workflow tools from the sidebar or overview tab
-              </p>
-              <Button onClick={() => setActiveTab('overview')}>
-                Go to Overview
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Managed Workflows</CardTitle>
+                <CardDescription>
+                  Select a client to manage their automation workflows
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                  </div>
+                ) : clients.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      No clients yet. Add a client to start managing their workflows.
+                    </p>
+                    <Button onClick={() => {
+                      setActiveTab('clients');
+                      setShowClientDialog(true);
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Client
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {clients
+                      .filter(client =>
+                        searchQuery === '' ||
+                        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        client.company?.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((client) => {
+                        const stats = clientStats[client.id] || { totalConnections: 0, totalWorkflows: 0 };
+                        const hasConnections = stats.totalConnections > 0;
+
+                        return (
+                          <Card
+                            key={client.id}
+                            className={`cursor-pointer transition-all hover:shadow-lg ${
+                              hasConnections ? 'hover:border-purple-500' : 'opacity-60'
+                            }`}
+                            onClick={() => {
+                              if (hasConnections) {
+                                navigate(`/agency/client/${client.id}/workflows`);
+                              }
+                            }}
+                          >
+                            <CardContent className="pt-6">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-lg mb-1">{client.name}</h3>
+                                  {client.company && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{client.company}</p>
+                                  )}
+                                </div>
+                                {hasConnections && (
+                                  <Badge variant="default" className="ml-2">
+                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                    Connected
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <div className="space-y-2 text-sm">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Platform Connections:</span>
+                                  <span className="font-semibold">{stats.totalConnections}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Workflows:</span>
+                                  <span className="font-semibold">{stats.totalWorkflows}</span>
+                                </div>
+                              </div>
+
+                              {!hasConnections && (
+                                <div className="mt-4 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200">
+                                  <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                                    No platform connections configured
+                                  </p>
+                                </div>
+                              )}
+
+                              {hasConnections && (
+                                <Button
+                                  className="w-full mt-4"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/agency/client/${client.id}/workflows`);
+                                  }}
+                                >
+                                  <Zap className="h-4 w-4 mr-2" />
+                                  Manage Workflows
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Analytics Tab */}

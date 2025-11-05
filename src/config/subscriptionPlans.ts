@@ -55,7 +55,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '5 credits per month',
       'n8n workflow generation',
       'Download workflow JSON',
-      'Basic email support'
+      'Community support'
     ],
     allowedFeatures: ['workflow_generation']
   },
@@ -78,7 +78,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'n8n Code Generator',
       'Save to History',
       'Access to 3 default templates',
-      'Priority email support'
+      'Basic email support'
     ],
     allowedFeatures: ['workflow_generation', 'code_generation', 'history', 'templates_limited'],
     stripePriceId: {
@@ -143,11 +143,10 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'Monitor workflow executions in n8n',
       'View last 20 executions with status',
       'Manual retry for failed workflows',
-      'Workflow Sets (orchestration packages)',
-      'Batch workflow generation (up to 10 per set)',
+      'Batch workflow generation (up to 5 per set)',
       'Export workflow sets as packages',
       'Shared context optimization',
-      'Priority support + Slack channel'
+      'Priority email support'
     ],
     comingSoonFeatures: [
       'Workflow Set Marketplace (publish your sets)',
