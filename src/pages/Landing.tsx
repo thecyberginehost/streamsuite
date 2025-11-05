@@ -131,6 +131,15 @@ export default function Landing() {
               <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium">
                 How It Works
               </a>
+              {!user && (
+                <Button
+                  variant="ghost"
+                  onClick={() => window.location.href = `${getDomainUrl('app')}/login`}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Login
+                </Button>
+              )}
               <Button onClick={handleGetStarted} className="bg-blue-600 hover:bg-blue-700">
                 {user ? 'Go to App' : 'Start Free'}
                 <ArrowRight className="ml-2 h-4 w-4" />

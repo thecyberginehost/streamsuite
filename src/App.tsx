@@ -81,9 +81,10 @@ const App = () => {
                 {/* App Domain Routes (app.streamsuite.io) */}
                 {currentDomain === 'app' && (
                   <>
-                    {/* Redirect root to /app */}
+                    {/* Public routes */}
                     <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
 
                     {/* App Pages (logged-in users) */}
                     <Route path="/app" element={
@@ -112,9 +113,10 @@ const App = () => {
                 {/* Agency Domain Routes (agency.streamsuite.io) */}
                 {currentDomain === 'agency' && (
                   <>
-                    {/* Redirect root to /agency */}
+                    {/* Public routes */}
                     <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
 
                     {/* Agency Dashboard */}
                     <Route path="/agency" element={
