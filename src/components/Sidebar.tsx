@@ -17,14 +17,14 @@ import { isFeatureEnabled } from '@/services/featureFlagService';
 const navigation = [
   {
     name: 'Generator',
-    href: '/',
+    href: '/app',
     icon: Sparkles,
     description: 'Generate workflows with AI',
     requiredFeature: 'workflow_generation'
   },
   {
     name: 'Batch Generator',
-    href: '/batch',
+    href: '/app/batch',
     icon: Package,
     description: 'Generate workflow sets',
     requiredFeature: 'batch_operations',
@@ -32,21 +32,21 @@ const navigation = [
   },
   {
     name: 'Templates',
-    href: '/templates',
+    href: '/app/templates',
     icon: Layers,
     description: 'Browse ready-made workflows',
     requiredFeature: 'templates' // Requires Pro plan
   },
   {
     name: 'Debugger',
-    href: '/debugger',
+    href: '/app/debugger',
     icon: Bug,
     description: 'Fix broken workflows',
     requiredFeature: 'workflow_debugging'
   },
   {
     name: 'Monitoring',
-    href: '/monitoring',
+    href: '/app/monitoring',
     icon: Zap,
     description: 'Monitor n8n workflows',
     requiredFeature: 'n8n_push',
@@ -54,28 +54,28 @@ const navigation = [
   },
   {
     name: 'History',
-    href: '/history',
+    href: '/app/history',
     icon: History,
     description: 'View past workflows',
     requiredFeature: 'history'
   },
   {
     name: 'Prompt Guide',
-    href: '/docs',
+    href: '/app/docs',
     icon: BookOpen,
     description: 'How to write great prompts',
     requiredFeature: 'workflow_generation' // Available to all
   },
   {
     name: 'Settings',
-    href: '/settings',
+    href: '/app/settings',
     icon: Settings,
     description: 'n8n connections & account settings',
   },
   // Future features (v2)
   // {
   //   name: 'Converter',
-  //   href: '/converter',
+  //   href: '/app/converter',
   //   icon: RefreshCw,
   //   description: 'Convert between platforms',
   //   comingSoon: true
@@ -167,7 +167,7 @@ export function Sidebar() {
               <NavLink
                 key={item.name}
                 to={item.href}
-                end={item.href === '/'}
+                end={item.href === '/app'}
                 onClick={(e) => handleNavigationClick(e, item)}
                 className={({ isActive }) =>
                   cn(
@@ -205,10 +205,10 @@ export function Sidebar() {
             {/* Enterprise Builder - Conditional based on feature flag */}
             {showEnterpriseBuilder && (
               <NavLink
-                to="/enterprise-builder"
+                to="/app/enterprise-builder"
                 onClick={(e) => handleNavigationClick(e, {
                   name: 'Enterprise Builder',
-                  href: '/enterprise-builder',
+                  href: '/app/enterprise-builder',
                   icon: Building2,
                   description: 'Complex workflows (20-100+ nodes)',
                   requiredFeature: 'batch_operations'
@@ -244,7 +244,7 @@ export function Sidebar() {
               <>
                 <div className="border-t border-gray-200 dark:border-gray-800 my-2" />
                 <NavLink
-                  to="/admin"
+                  to="/app/admin"
                   className={({ isActive }) =>
                     cn(
                       'group flex items-center gap-2 px-2 py-1.5 text-[13px] font-medium rounded-md transition-colors',

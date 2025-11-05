@@ -11,7 +11,10 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(git commit:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(How It Works)",
+      "Bash(Login)",
+      "Bash(Start Free\"\n- Login button → app.streamsuite.io/login\n- Start Free button → app.streamsuite.io/signup\n- No more 404 errors on signup page\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
