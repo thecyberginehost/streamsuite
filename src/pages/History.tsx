@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,8 @@ import {
   Star,
   StarOff,
   Eye,
-  BookmarkPlus
+  BookmarkPlus,
+  ArrowLeft
 } from 'lucide-react';
 import { PushToN8nButton } from '@/components/workflow/PushToN8nButton';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
@@ -39,6 +41,7 @@ import { getUserWorkflows, deleteWorkflow, updateWorkflow, type Workflow } from 
 import WorkflowJsonViewer from '@/components/workflow/WorkflowJsonViewer';
 
 export default function History() {
+  const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
@@ -284,11 +287,24 @@ export default function History() {
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Workflow History</h1>
-          <p className="text-gray-600 mt-1">
-            {workflows.length} workflow{workflows.length !== 1 ? 's' : ''} saved
-          </p>
+        <div className="flex items-center gap-3">
+          {profile?.subscription_tier === 'agency' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/agency')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Workflow History</h1>
+            <p className="text-gray-600 mt-1">
+              {workflows.length} workflow{workflows.length !== 1 ? 's' : ''} saved
+            </p>
+          </div>
         </div>
       </div>
 

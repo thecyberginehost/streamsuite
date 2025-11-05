@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
-import { Sparkles, Wand2, AlertCircle, CheckCircle2, Download, Copy, Save, Check, Code2 } from 'lucide-react';
+import { Sparkles, Wand2, AlertCircle, CheckCircle2, Download, Copy, Save, Check, Code2, ArrowLeft } from 'lucide-react';
 import { PushToN8nButton } from '@/components/workflow/PushToN8nButton';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { generateWorkflow, generateWorkflowName, generateCustomCode } from '@/services/aiService';
 import { saveWorkflow } from '@/services/workflowService';
 import { validatePrompt } from '@/services/promptValidator';
+import { validateCodePrompt, getSecurityThreatLevel } from '@/services/codePromptValidator';
 import {
   hasEnoughCredits,
   deductCredits,
@@ -415,6 +416,43 @@ export default function GeneratorNew() {
       return;
     }
 
+    // Validate code prompt (security, language mismatch, workflow attempt)
+    const validation = validateCodePrompt(codePrompt, codeLanguage, codePlatform);
+    if (!validation.isValid) {
+      // Log blocked attempt
+      const threatLevel = getSecurityThreatLevel(codePrompt);
+      await logBlocked('code_generation', validation.reason || 'Invalid request', {
+        type: 'code_generation',
+        category: validation.category,
+        platform: codePlatform,
+        language: codeLanguage,
+        prompt: codePrompt.substring(0, 100),
+        threat_level: threatLevel,
+        input_method: codePromptInputMethod,
+        paste_count: codePromptPasteCount
+      });
+
+      toast({
+        title: validation.category === 'security_threat' ? '🚨 Security Alert' : '❌ Invalid Request',
+        description: validation.reason,
+        variant: 'destructive',
+        duration: 10000,
+      });
+
+      // Show suggestion in a separate toast if available
+      if (validation.suggestion) {
+        setTimeout(() => {
+          toast({
+            title: '💡 Suggestion',
+            description: validation.suggestion,
+            duration: 8000,
+          });
+        }, 500);
+      }
+
+      return;
+    }
+
     // Check credits (code generation also costs 1 credit)
     const hasCredits = await hasEnoughCredits(1);
     if (!hasCredits) {
@@ -518,13 +556,26 @@ export default function GeneratorNew() {
     <div className="h-full max-h-[calc(100vh-96px)] flex flex-col gap-4 overflow-hidden">
       {/* Header with Credit Balance */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            AI Generator
-          </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Generate workflows and custom code with AI
-          </p>
+        <div className="flex items-center gap-3">
+          {profile?.subscription_tier === 'agency' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/agency')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Agency Dashboard
+            </Button>
+          )}
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              AI Generator
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Generate workflows and custom code with AI
+            </p>
+          </div>
         </div>
 
         {/* Credit Balance Display */}

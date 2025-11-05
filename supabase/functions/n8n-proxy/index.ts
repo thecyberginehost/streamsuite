@@ -63,17 +63,17 @@ serve(async (req) => {
       );
     }
 
-    // Get n8n connection from database
-    console.log('Querying n8n_connections:', { connectionId, userId: user.id });
+    // Get n8n connection from database (using new client_platform_connections table)
+    console.log('Querying client_platform_connections:', { connectionId, userId: user.id });
 
     const { data: connection, error: connError } = await supabaseClient
-      .from('n8n_connections')
+      .from('client_platform_connections')
       .select('*')
       .eq('id', connectionId)
-      .eq('user_id', user.id)
+      .eq('platform', 'n8n')
       .single();
 
-    console.log('n8n_connections query result:', { connection, connError });
+    console.log('client_platform_connections query result:', { connection, connError });
 
     if (connError || !connection) {
       return new Response(
@@ -87,7 +87,7 @@ serve(async (req) => {
       );
     }
 
-    const { instance_url, api_key } = connection;
+    const { n8n_instance_url: instance_url, n8n_api_key: api_key } = connection;
 
     // Route to appropriate n8n API endpoint
     let n8nResponse;

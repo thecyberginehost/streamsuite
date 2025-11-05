@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendSlackAlert } from '../_shared/alerting.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,6 +72,54 @@ serve(async (req) => {
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
+        }
+      )
+    }
+
+    // **SECURITY VALIDATION** - Validate prompt for malicious input
+    const validation = validateBatchPrompt(prompt)
+    if (validation.blocked) {
+      // Log security event
+      await supabaseClient.from('audit_logs').insert({
+        user_id: user.id,
+        event_id: crypto.randomUUID(),
+        action_type: 'batch_generate',
+        action_status: 'blocked',
+        action_details: {
+          platform,
+          prompt: prompt.substring(0, 500),
+          workflowCount,
+          validation_category: validation.category,
+          threat_level: validation.threatLevel,
+        },
+        credits_used: 0,
+        threat_detected: true,
+        threat_type: validation.category,
+        threat_severity: validation.threatLevel,
+        threat_details: validation.error,
+        ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+        user_agent: req.headers.get('user-agent') || 'unknown',
+      })
+
+      // Alert on critical/high severity threats
+      if (validation.threatLevel === 'critical' || validation.threatLevel === 'high') {
+        await sendSlackAlert(
+          `Batch generation blocked: ${validation.category}`,
+          validation.threatLevel,
+          {
+            user_id: user.id,
+            platform,
+            category: validation.category,
+            prompt_preview: prompt.substring(0, 200),
+          }
+        ).catch(console.error)
+      }
+
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
         }
       )
     }
@@ -206,11 +255,179 @@ No markdown, no code blocks, just the JSON array.`
   }
 })
 
+/**
+ * Validates batch generation prompt for security threats
+ * Returns { blocked: true, error: string, category: string, threatLevel: string } if malicious
+ * Returns { blocked: false } if safe
+ */
+function validateBatchPrompt(prompt: string): any {
+  const lowerPrompt = prompt.toLowerCase()
+
+  // 1. Block prompt injection attempts (CRITICAL THREAT)
+  const promptInjectionPatterns = [
+    /ignore\s+(all\s+)?(previous|prior)\s+(instructions?|directions?)/i,
+    /disregard\s+(all\s+)?(previous|prior)\s+instructions?/i,
+    /forget\s+(everything|all\s+previous)/i,
+    /you\s+are\s+now\s+(a|an)\s+/i,
+    /new\s+instructions?:/i,
+    /system\s+prompt:/i,
+  ]
+
+  for (const pattern of promptInjectionPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Prompt injection attempt detected. This action has been logged.',
+        category: 'prompt_injection',
+        threatLevel: 'critical'
+      }
+    }
+  }
+
+  // 2. Block malicious workflow requests (CRITICAL THREAT)
+  const maliciousPatterns = [
+    /\b(malicious|virus|trojan|malware|backdoor|keylog|ransomware)\b/i,
+    /\b(steal|hack|exploit|breach|crack)\b/i,
+    /\b(bypass|circumvent)\s+(security|authentication)/i,
+    /\bddos|dos\s+attack/i,
+    /\bunauthorized\s+access/i,
+    /\b(smb|rce|remote\s+code\s+execution|command\s+injection)\b/i,
+    /\b(sql\s+injection|xss|cross[- ]site\s+scripting)/i,
+  ]
+
+  for (const pattern of maliciousPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Malicious workflow generation request blocked. This violates our terms of service.',
+        category: 'malicious_workflow',
+        threatLevel: 'critical'
+      }
+    }
+  }
+
+  // 3. Block data exfiltration (CRITICAL)
+  const dataExfiltrationPatterns = [
+    /\b(exfiltrate|extract|download|dump)\s+(all\s+)?(data|database|credentials?|passwords?)/i,
+    /\b(send|post|upload)\s+(to|data\s+to)\s+(external|remote)/i,
+    /\bsteal\s+(credentials?|passwords?|tokens?)/i,
+  ]
+
+  for (const pattern of dataExfiltrationPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Data exfiltration attempt detected. This action has been logged.',
+        category: 'data_exfiltration',
+        threatLevel: 'critical'
+      }
+    }
+  }
+
+  // 4. Block spam/abuse (HIGH)
+  const spamPatterns = [
+    /\b(mass|bulk|automated)\s+(email|sms|message)/i,
+    /\bsend\s+\d+\s+(emails?|messages?)/i,
+    /\b(scrape|harvest)\s+(email|phone|contact)/i,
+  ]
+
+  for (const pattern of spamPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Spam/abuse automation is not allowed. This violates our terms of service.',
+        category: 'spam_abuse',
+        threatLevel: 'high'
+      }
+    }
+  }
+
+  // 5. Block privacy violations (HIGH)
+  const privacyPatterns = [
+    /\b(track|monitor|spy)\s+(users?|people)\s+without/i,
+    /\b(hidden|stealth|invisible)\s+(tracker|logger)/i,
+    /\bcollect\s+(personal|private)\s+data\s+without\s+consent/i,
+  ]
+
+  for (const pattern of privacyPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Privacy violation detected. Unauthorized tracking/monitoring is illegal.',
+        category: 'privacy_violation',
+        threatLevel: 'high'
+      }
+    }
+  }
+
+  // 6. Block social engineering (CRITICAL)
+  const socialEngineeringPatterns = [
+    /\b(phishing|spear[- ]?phishing)/i,
+    /\b(fake|spoofed?)\s+(login|signin)\s+(page|form)/i,
+    /\b(impersonate|pretend\s+to\s+be|pose\s+as)\s+(company|admin)/i,
+  ]
+
+  for (const pattern of socialEngineeringPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Social engineering/phishing attempt detected. This is illegal.',
+        category: 'social_engineering',
+        threatLevel: 'critical'
+      }
+    }
+  }
+
+  // 7. Block cryptocurrency mining (CRITICAL)
+  const cryptoMiningPatterns = [
+    /\b(crypto|bitcoin|ethereum|monero)\s+(mining|miner)/i,
+    /\bcoinhive|cryptoloot|jsecoin/i,
+    /\b(mine|mining)\s+(cryptocurrency|crypto)/i,
+  ]
+
+  for (const pattern of cryptoMiningPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Cryptocurrency mining code is not allowed.',
+        category: 'crypto_mining',
+        threatLevel: 'critical'
+      }
+    }
+  }
+
+  // 8. Block financial fraud (CRITICAL)
+  const financialFraudPatterns = [
+    /\b(fake|counterfeit|forged?)\s+(payment|transaction|invoice)/i,
+    /\b(chargeback|refund)\s+(fraud|abuse)/i,
+    /\b(credit\s+card|payment)\s+(testing|validation)/i,
+  ]
+
+  for (const pattern of financialFraudPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return {
+        blocked: true,
+        error: '🚨 Financial fraud detected. This is illegal and has been reported.',
+        category: 'financial_fraud',
+        threatLevel: 'critical'
+      }
+    }
+  }
+
+  return { blocked: false }
+}
+
 function getSystemPrompt(platform: string): string {
   if (platform === 'n8n') {
     return `You are an expert n8n workflow automation engineer.
 
 Generate production-ready n8n workflow JSON from descriptions.
+
+IMPORTANT SECURITY RULES:
+- NEVER generate malicious workflows (malware, hacking tools, data theft)
+- NEVER generate spam, phishing, or privacy-violating workflows
+- NEVER generate workflows for unauthorized access or circumventing security
+- REFUSE any requests that violate ethics or laws
 
 Return ONLY valid JSON in this format (no markdown, no code blocks):
 
@@ -225,7 +442,13 @@ Return ONLY valid JSON in this format (no markdown, no code blocks):
 }`
   }
 
-  return 'You are an expert workflow automation engineer.'
+  return `You are an expert workflow automation engineer.
+
+IMPORTANT SECURITY RULES:
+- NEVER generate malicious workflows (malware, hacking tools, data theft)
+- NEVER generate spam, phishing, or privacy-violating workflows
+- NEVER generate workflows for unauthorized access or circumventing security
+- REFUSE any requests that violate ethics or laws`
 }
 
 function parseWorkflowResponse(text: string): any {

@@ -63,6 +63,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import UserAuditLog from '@/components/admin/UserAuditLog';
+import AllAuditLogs from '@/components/admin/AllAuditLogs';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -75,6 +76,7 @@ export default function Admin() {
   const [showCreditsDialog, setShowCreditsDialog] = useState(false);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
   const [showAuditLogDialog, setShowAuditLogDialog] = useState(false);
+  const [showAllLogsDialog, setShowAllLogsDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'growth' | 'agency'>('free');
   const [creditAmount, setCreditAmount] = useState('');
   const [creditType, setCreditType] = useState<'regular' | 'bonus'>('regular');
@@ -322,15 +324,26 @@ export default function Admin() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={loadUsers}
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs"
-        >
-          <RefreshCw className="h-3 w-3 mr-1.5" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setShowAllLogsDialog(true)}
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+          >
+            <Shield className="h-3 w-3 mr-1.5" />
+            All Audit Logs
+          </Button>
+          <Button
+            onClick={loadUsers}
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+          >
+            <RefreshCw className="h-3 w-3 mr-1.5" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -750,6 +763,21 @@ export default function Admin() {
               Close
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* All Audit Logs Dialog */}
+      <Dialog open={showAllLogsDialog} onOpenChange={setShowAllLogsDialog}>
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>All Audit Logs - System Wide</DialogTitle>
+            <DialogDescription>
+              Aggregated security and activity logs across all users
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(95vh-100px)]">
+            <AllAuditLogs />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

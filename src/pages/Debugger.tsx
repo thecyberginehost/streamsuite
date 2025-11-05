@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Bug, Upload, Wand2, AlertCircle, CheckCircle2, FileJson, Download } from 'lucide-react';
+import { Bug, Upload, Wand2, AlertCircle, CheckCircle2, FileJson, Download, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
 import WorkflowJsonViewer from '@/components/workflow/WorkflowJsonViewer';
@@ -415,6 +415,19 @@ export default function Debugger() {
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center mb-8">
+        {profile?.subscription_tier === 'agency' && (
+          <div className="flex justify-center mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/agency')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Agency Dashboard
+            </Button>
+          </div>
+        )}
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-center gap-3">
           <Bug className="h-10 w-10 text-red-600" />
           Workflow Debugger

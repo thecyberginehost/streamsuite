@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
 import {
   Layers, Search, Download, Sparkles, FolderPlus, Folder,
-  MoreVertical, Edit2, Trash2, FolderOpen, ChevronRight, ChevronDown
+  MoreVertical, Edit2, Trash2, FolderOpen, ChevronRight, ChevronDown, ArrowLeft
 } from 'lucide-react';
 import { N8N_WORKFLOW_TEMPLATES } from '@/lib/n8n/workflowTemplates';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
@@ -47,6 +48,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function Templates() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'default' | 'user'>('default');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -363,7 +365,20 @@ export default function Templates() {
     <div className="max-w-7xl mx-auto space-y-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Workflow Templates</h1>
+        <div className="flex items-center gap-3 mb-1">
+          {profile?.subscription_tier === 'agency' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/agency')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+          )}
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Workflow Templates</h1>
+        </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Browse production-ready templates and organize your own saved workflows
         </p>

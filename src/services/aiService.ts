@@ -449,6 +449,40 @@ export async function generateCustomCode(
       },
     });
 
+    // Check if backend blocked the request (validation failure)
+    if (data?.blocked) {
+      console.warn('[generateCustomCode] Backend blocked request:', {
+        category: data.category,
+        threatLevel: data.threatLevel,
+        error: data.error
+      });
+
+      // Log to audit_logs if this was a security threat
+      if (data.threatLevel && ['critical', 'high'].includes(data.threatLevel)) {
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: session.user.id,
+            event_type: 'code_generation',
+            event_subtype: 'blocked_by_backend',
+            severity: data.threatLevel,
+            description: data.error || 'Code generation blocked by backend validation',
+            metadata: {
+              platform: request.platform,
+              language: request.language,
+              category: data.category,
+              threat_level: data.threatLevel,
+              prompt_preview: request.prompt.substring(0, 100)
+            }
+          });
+        } catch (logError) {
+          console.error('[generateCustomCode] Failed to log blocked request:', logError);
+        }
+      }
+
+      // Throw user-friendly error
+      throw new Error(data.error || 'Request blocked by security validation');
+    }
+
     if (error) {
       console.error('Edge Function error:', error);
       throw new Error(error.message || 'Failed to generate code');

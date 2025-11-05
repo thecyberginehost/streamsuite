@@ -24,15 +24,38 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import BatchGenerator from "./pages/BatchGenerator";
 import AgencyDashboard from "./pages/AgencyDashboard";
+import ClientProfile from "./pages/ClientProfile";
+import ClientWorkflows from "./pages/ClientWorkflows";
+import APIDocs from "./pages/APIDocs";
+import AgencyDocs from "./pages/AgencyDocs";
 import EnterpriseBuilder from "./pages/EnterpriseBuilder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+/**
+ * Determine which domain we're on
+ * Returns 'marketing' | 'app' | 'agency'
+ */
+function getCurrentDomain(): 'marketing' | 'app' | 'agency' {
+  const hostname = window.location.hostname;
+
+  // Development: localhost - determine by path
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    const path = window.location.pathname;
+    if (path.startsWith('/agency')) return 'agency';
+    if (path.startsWith('/app')) return 'app';
+    return 'marketing';
+  }
+
+  // Production: determine by hostname
+  if (hostname.includes('app.')) return 'app';
+  if (hostname.includes('agency.')) return 'agency';
+  return 'marketing'; // streamsuite.io or www.streamsuite.io
+}
+
 const App = () => {
-  // For now, we'll use the current domain for both marketing and app
-  // In production, we'll split this based on subdomain (streamsuite.io vs app.streamsuite.io)
-  // See DEPLOYMENT.md for full subdomain setup instructions
+  const currentDomain = getCurrentDomain();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -44,42 +67,102 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
               <Routes>
-                {/* Marketing Pages (streamsuite.io) */}
-                <Route path="/landing" element={<Landing />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
+                {/* Marketing Domain Routes (streamsuite.io) */}
+                {currentDomain === 'marketing' && (
+                  <>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
+                    <Route path="*" element={<NotFound />} />
+                  </>
+                )}
 
-                {/* Agency Dashboard (agency.streamsuite.io - for now on same domain) */}
-                <Route path="/agency" element={
-                  <ProtectedRoute>
-                    <AgencyDashboard />
-                  </ProtectedRoute>
-                } />
+                {/* App Domain Routes (app.streamsuite.io) */}
+                {currentDomain === 'app' && (
+                  <>
+                    {/* Redirect root to /app */}
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
 
-                {/* App Pages (app.streamsuite.io - for now on same domain) */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Generator />} />
-                  <Route path="templates" element={<Templates />} />
-                  <Route path="converter" element={<Converter />} />
-                  <Route path="debugger" element={<Debugger />} />
-                  <Route path="batch" element={<BatchGenerator />} />
-                  <Route path="monitoring" element={<Monitoring />} />
-                  <Route path="monitoring/:connectionId" element={<WorkflowAnalytics />} />
-                  <Route path="enterprise-builder" element={<EnterpriseBuilder />} />
-                  <Route path="history" element={<History />} />
-                  <Route path="docs" element={<Docs />} />
-                  <Route path="settings" element={<Settings />} />
+                    {/* App Pages (logged-in users) */}
+                    <Route path="/app" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }>
+                      <Route index element={<Generator />} />
+                      <Route path="templates" element={<Templates />} />
+                      <Route path="converter" element={<Converter />} />
+                      <Route path="debugger" element={<Debugger />} />
+                      <Route path="batch" element={<BatchGenerator />} />
+                      <Route path="monitoring" element={<Monitoring />} />
+                      <Route path="monitoring/:connectionId" element={<WorkflowAnalytics />} />
+                      <Route path="enterprise-builder" element={<EnterpriseBuilder />} />
+                      <Route path="history" element={<History />} />
+                      <Route path="docs" element={<Docs />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="admin" element={<Admin />} />
+                    </Route>
 
-                  {/* Admin Panel (employee.streamsuite.io - for now on same domain) */}
-                  <Route path="admin" element={<Admin />} />
-                </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </>
+                )}
 
-                <Route path="*" element={<NotFound />} />
+                {/* Agency Domain Routes (agency.streamsuite.io) */}
+                {currentDomain === 'agency' && (
+                  <>
+                    {/* Redirect root to /agency */}
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
+
+                    {/* Agency Dashboard */}
+                    <Route path="/agency" element={
+                      <ProtectedRoute>
+                        <AgencyDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agency/client/:clientId" element={
+                      <ProtectedRoute>
+                        <ClientProfile />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agency/client/:clientId/workflows" element={
+                      <ProtectedRoute>
+                        <ClientWorkflows />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agency/api-docs" element={
+                      <ProtectedRoute>
+                        <APIDocs />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agency/docs" element={
+                      <ProtectedRoute>
+                        <AgencyDocs />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Agency-specific workflow tools */}
+                    <Route path="/agency/generator" element={
+                      <ProtectedRoute agencyOnly>
+                        <Generator />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agency/debugger" element={
+                      <ProtectedRoute agencyOnly>
+                        <Debugger />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agency/batch" element={
+                      <ProtectedRoute agencyOnly>
+                        <BatchGenerator />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="*" element={<NotFound />} />
+                  </>
+                )}
               </Routes>
             </BrowserRouter>
           </TooltipProvider>

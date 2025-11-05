@@ -63,13 +63,17 @@ CNAME   www       streamsuite.io         Auto (optional redirect)
 
 ### Step 2: Create `vercel.json` Configuration
 
-**Already configured!** The existing `vercel.json` handles SPA routing for all domains.
+**✅ Already configured!** The `vercel.json` file handles SPA routing for all domains.
 
 All routes serve `/index.html`, then React Router + domain detection handles the rest.
 
+The configuration includes:
+- SPA rewrites (all routes → index.html)
+- Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+
 ### Step 3: App Routing Structure
 
-**Current implementation** in [src/App.tsx](src/App.tsx) already supports domain-based routing:
+**✅ Fully implemented!** [src/App.tsx](src/App.tsx) now has complete domain-based routing with the `getCurrentDomain()` function that detects the hostname and conditionally renders routes:
 
 ```
 streamsuite.io routes:

@@ -40,7 +40,8 @@ import {
   Clock,
   FileCode,
   Save,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useCredits } from '@/hooks/useCredits';
@@ -586,11 +587,24 @@ ${workflowSet.some(w => w.dependsOn && w.dependsOn.length > 0) ? '\n⚠️ Note:
       {/* Header */}
       <div className="flex-none border-b bg-white dark:bg-gray-800 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Batch Workflow Generation</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Generate up to {maxWorkflows} interconnected workflows as a system
-            </p>
+          <div className="flex items-center gap-3">
+            {profile?.subscription_tier === 'agency' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/agency')}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold">Batch Workflow Generation</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Generate up to {maxWorkflows} interconnected workflows as a system
+              </p>
+            </div>
           </div>
           <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
             <Coins className="h-3 w-3 mr-1" />
