@@ -30,6 +30,26 @@ export default function SignUp() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  /**
+   * Get the appropriate domain URL based on environment
+   */
+  const getDomainUrl = (domain: 'marketing' | 'app' | 'agency'): string => {
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (isDev) {
+      return window.location.origin; // Use localhost for development
+    }
+
+    // Production domains from env vars
+    const domains = {
+      marketing: import.meta.env.VITE_MARKETING_DOMAIN || 'https://streamsuite.io',
+      app: import.meta.env.VITE_APP_DOMAIN || 'https://app.streamsuite.io',
+      agency: import.meta.env.VITE_AGENCY_DOMAIN || 'https://agency.streamsuite.io'
+    };
+
+    return domains[domain];
+  };
+
   // Step 1: Handle Credentials
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +82,9 @@ export default function SignUp() {
 
         // TODO: Create profile, add 5 free credits
         toast.success('Welcome to StreamSuite! You have 5 free credits.');
-        navigate('/');
+
+        // Redirect to app domain after successful signup
+        window.location.href = `${getDomainUrl('app')}/app`;
       } catch (error: any) {
         toast.error(error.message || 'Failed to create account');
       } finally {
@@ -98,7 +120,9 @@ export default function SignUp() {
       }
 
       toast.success('Account created! Payment integration coming soon.');
-      navigate('/');
+
+      // Redirect to app domain after successful signup
+      window.location.href = `${getDomainUrl('app')}/app`;
     } catch (error: any) {
       toast.error(error.message || 'Payment failed');
     } finally {
@@ -225,7 +249,10 @@ export default function SignUp() {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => navigate('/login')}
+              onClick={() => {
+                // Redirect to login on the same domain (works for both localhost and app.streamsuite.io)
+                window.location.href = `${window.location.origin}/login`;
+              }}
               className="w-full"
             >
               Already have an account? <strong className="ml-1">Sign in</strong>

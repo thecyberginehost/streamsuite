@@ -39,17 +39,40 @@ export default function Landing() {
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
 
+  /**
+   * Get the appropriate domain URL based on environment
+   */
+  const getDomainUrl = (domain: 'marketing' | 'app' | 'agency'): string => {
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (isDev) {
+      return window.location.origin; // Use localhost for development
+    }
+
+    // Production domains from env vars
+    const domains = {
+      marketing: import.meta.env.VITE_MARKETING_DOMAIN || 'https://streamsuite.io',
+      app: import.meta.env.VITE_APP_DOMAIN || 'https://app.streamsuite.io',
+      agency: import.meta.env.VITE_AGENCY_DOMAIN || 'https://agency.streamsuite.io'
+    };
+
+    return domains[domain];
+  };
+
   const handleGetStarted = () => {
     if (user) {
-      navigate('/app');
+      // User is logged in, redirect to app domain
+      window.location.href = `${getDomainUrl('app')}/app`;
     } else {
-      navigate('/login');
+      // User is not logged in, redirect to signup page on app domain
+      window.location.href = `${getDomainUrl('app')}/signup`;
     }
   };
 
   const handleSubscribe = async (planId: string) => {
     if (!user) {
-      navigate('/login');
+      // Redirect to signup page on app domain
+      window.location.href = `${getDomainUrl('app')}/signup`;
       return;
     }
 
