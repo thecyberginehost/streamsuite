@@ -36,10 +36,13 @@ import {
   AlertCircle,
   Zap,
   Lock,
-  Activity
+  Activity,
+  Crown,
+  CreditCard,
+  Check
 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
-import { canAccessFeature } from '@/config/subscriptionPlans';
+import { canAccessFeature, getPlanByTier, SUBSCRIPTION_PLANS } from '@/config/subscriptionPlans';
 import {
   testN8nConnection,
   saveN8nConnection,
@@ -224,6 +227,8 @@ export default function Settings() {
     setWorkflowsDialogOpen(true);
   };
 
+  const currentPlan = profile ? getPlanByTier(profile.subscription_tier) : SUBSCRIPTION_PLANS.free;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -233,9 +238,109 @@ export default function Settings() {
           Settings
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Manage your n8n connections and account settings
+          Manage your subscription, n8n connections, and account settings
         </p>
       </div>
+
+      {/* Subscription Plan Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                Current Subscription
+              </CardTitle>
+              <CardDescription className="mt-2">
+                Your plan details and included features
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="text-lg px-4 py-2">
+              {currentPlan.displayName}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Plan Summary */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h3 className="text-lg font-semibold">{currentPlan.displayName} Plan</h3>
+                {currentPlan.id !== 'free' && (
+                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                    Active
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {currentPlan.credits.monthly} credits per month
+                {currentPlan.batchCredits && ` • ${currentPlan.batchCredits.monthly} batch credits`}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold">
+                {currentPlan.price.monthly === 0 ? 'Free' : `$${currentPlan.price.monthly}`}
+              </div>
+              {currentPlan.price.monthly > 0 && (
+                <p className="text-xs text-gray-500">per month</p>
+              )}
+            </div>
+          </div>
+
+          {/* Included Features */}
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Included Features
+            </h4>
+            <div className="grid md:grid-cols-2 gap-2">
+              {currentPlan.features.map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-sm">
+                  <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Coming Soon Features (if any) */}
+          {currentPlan.comingSoonFeatures && currentPlan.comingSoonFeatures.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Coming Soon
+              </h4>
+              <div className="grid md:grid-cols-2 gap-2">
+                {currentPlan.comingSoonFeatures.map((feature, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm">
+                    <Loader2 className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5 animate-spin" />
+                    <span className="text-gray-600 dark:text-gray-400">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upgrade CTA (for non-Agency users) */}
+          {currentPlan.id !== 'agency' && (
+            <div className="pt-4 border-t">
+              <Alert className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
+                <Zap className="h-4 w-4" />
+                <AlertTitle>Want more features?</AlertTitle>
+                <AlertDescription className="flex items-center justify-between">
+                  <span>
+                    Upgrade to unlock {currentPlan.id === 'free' ? 'advanced AI features' : currentPlan.id === 'starter' ? 'debugging and templates' : currentPlan.id === 'pro' ? 'batch operations and monitoring' : 'team collaboration'}
+                  </span>
+                  <Button size="sm" className="ml-4">
+                    View Plans
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* n8n Connections Section */}
       <Card>
