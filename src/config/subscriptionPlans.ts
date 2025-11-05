@@ -76,7 +76,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '25 credits per month',
       'Everything in Free',
       'n8n Code Generator',
-      'Save to History',
+      'Save to History (manual)',
       'Access to 3 default templates',
       'Basic email support'
     ],
@@ -102,6 +102,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     features: [
       '100 credits per month',
       'Everything in Starter',
+      'Auto-save to History',
       'AI debugging & error fixes',
       'Push workflows directly to n8n',
       'ALL default templates (full library)',
@@ -113,7 +114,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     comingSoonFeatures: [
       'Workflow conversion (n8n ↔ Make ↔ Zapier)'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'n8n_push'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'api_access', 'n8n_push'],
     stripePriceId: {
       monthly: 'price_pro_monthly',
       yearly: 'price_pro_yearly'
@@ -140,6 +141,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '250 credits per month',
       '10 batch credits per month',
       'Everything in Pro',
+      'Auto-save to History',
       'Monitor workflow executions in n8n',
       'View last 20 executions with status',
       'Manual retry for failed workflows',
@@ -152,7 +154,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'Workflow Set Marketplace (publish your sets)',
       'Advanced export options'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'n8n_push', 'n8n_monitoring'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'n8n_push', 'n8n_monitoring'],
     stripePriceId: {
       monthly: 'price_growth_monthly',
       yearly: 'price_growth_yearly'
@@ -179,6 +181,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       '750 credits per month (shared pool)',
       '50 batch credits per month',
       'Everything in Growth',
+      'Auto-save to History',
       'Batch workflow generation (up to 10 per set)',
       '2 team seats included',
       'Dedicated account manager'
@@ -191,7 +194,7 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'Custom branding on exports',
       'Priority processing queue'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'agency_dashboard', 'team_access', 'client_workspaces', 'usage_analytics', 'custom_branding', 'priority_queue', 'credit_delegation', 'n8n_push', 'n8n_monitoring'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'agency_dashboard', 'team_access', 'client_workspaces', 'usage_analytics', 'custom_branding', 'priority_queue', 'credit_delegation', 'n8n_push', 'n8n_monitoring'],
     stripePriceId: {
       monthly: 'price_agency_monthly',
       yearly: 'price_agency_yearly'
@@ -327,4 +330,11 @@ export function getMaxWorkflowsPerSet(tier: string): number {
 export function hasBatchCreditsAccess(tier: string): boolean {
   const plan = getPlanByTier(tier);
   return !!plan.batchCredits && plan.batchCredits.monthly > 0;
+}
+
+/**
+ * Check if user has auto-save to history enabled (Pro, Growth, Agency)
+ */
+export function hasAutoSaveHistory(tier: string): boolean {
+  return canAccessFeature(tier, 'history_auto_save');
 }
