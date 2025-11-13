@@ -20,6 +20,9 @@ export interface SubscriptionPlan {
     monthly: number;
     maxWorkflowsPerSet: number;
   };
+  n8nConnections?: {
+    maxConnections: number; // Maximum n8n instance connections allowed
+  };
   features: string[]; // Current available features
   comingSoonFeatures?: string[]; // Features in development
   allowedFeatures: string[];
@@ -99,22 +102,24 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       monthly: 100,
       rolloverMax: 0
     },
+    n8nConnections: {
+      maxConnections: 1 // Pro gets 1 n8n connection
+    },
     features: [
       '100 credits per month',
       'Everything in Starter',
       'Auto-save to History',
       'AI debugging & error fixes',
-      'Push workflows directly to n8n',
+      'Push workflows directly to n8n (1 connection)',
       'ALL default templates (full library)',
       'Save unlimited custom templates',
       'Template folders & organization',
-      'API access (programmatic generation)',
-      'Priority email support'
+      'Email support'
     ],
     comingSoonFeatures: [
       'Workflow conversion (n8n ↔ Make ↔ Zapier)'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'api_access', 'n8n_push'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'n8n_push'],
     stripePriceId: {
       monthly: 'price_pro_monthly',
       yearly: 'price_pro_yearly'
@@ -137,6 +142,9 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       monthly: 10,
       maxWorkflowsPerSet: 5
     },
+    n8nConnections: {
+      maxConnections: 3 // Growth gets 3 n8n connections
+    },
     features: [
       '250 credits per month',
       '10 batch credits per month',
@@ -145,16 +153,15 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       'Monitor workflow executions in n8n',
       'View last 20 executions with status',
       'Manual retry for failed workflows',
-      'Batch workflow generation (up to 5 per set)',
+      'Up to 3 n8n connections',
       'Export workflow sets as packages',
-      'Shared context optimization',
       'Priority email support'
     ],
     comingSoonFeatures: [
       'Workflow Set Marketplace (publish your sets)',
       'Advanced export options'
     ],
-    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'api_access', 'batch_operations', 'workflow_sets', 'advanced_export', 'n8n_push', 'n8n_monitoring'],
+    allowedFeatures: ['workflow_generation', 'code_generation', 'workflow_conversion', 'workflow_debugging', 'templates', 'history', 'history_auto_save', 'template_folders', 'batch_operations', 'workflow_sets', 'advanced_export', 'n8n_push', 'n8n_monitoring'],
     stripePriceId: {
       monthly: 'price_growth_monthly',
       yearly: 'price_growth_yearly'
@@ -176,6 +183,9 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     batchCredits: {
       monthly: 50,
       maxWorkflowsPerSet: 5
+    },
+    n8nConnections: {
+      maxConnections: -1 // Agency gets unlimited n8n connections (-1 = unlimited)
     },
     features: [
       '750 credits per month (shared pool)',
@@ -337,4 +347,29 @@ export function hasBatchCreditsAccess(tier: string): boolean {
  */
 export function hasAutoSaveHistory(tier: string): boolean {
   return canAccessFeature(tier, 'history_auto_save');
+}
+
+/**
+ * Get maximum n8n connections allowed for a tier
+ * Returns -1 for unlimited (Agency), 0 for no access, or specific number
+ */
+export function getMaxN8nConnections(tier: string): number {
+  const plan = getPlanByTier(tier);
+  return plan.n8nConnections?.maxConnections || 0;
+}
+
+/**
+ * Check if user can add more n8n connections
+ */
+export function canAddN8nConnection(tier: string, currentConnections: number): boolean {
+  const maxConnections = getMaxN8nConnections(tier);
+
+  // No n8n access
+  if (maxConnections === 0) return false;
+
+  // Unlimited connections (Agency)
+  if (maxConnections === -1) return true;
+
+  // Check if under limit
+  return currentConnections < maxConnections;
 }
