@@ -20,7 +20,9 @@ import {
   StarOff,
   Eye,
   BookmarkPlus,
-  ArrowLeft
+  ArrowLeft,
+  BellOff,
+  Sparkles
 } from 'lucide-react';
 import { PushToN8nButton } from '@/components/workflow/PushToN8nButton';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
@@ -37,7 +39,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getUserWorkflows, deleteWorkflow, updateWorkflow, type Workflow } from '@/services/workflowService';
+import { getUserWorkflows, deleteWorkflow, updateWorkflow, clearAllPendingWorkflows, type Workflow } from '@/services/workflowService';
 import WorkflowJsonViewer from '@/components/workflow/WorkflowJsonViewer';
 
 export default function History() {
@@ -49,12 +51,16 @@ export default function History() {
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [clearingPending, setClearingPending] = useState(false);
   const { toast } = useToast();
   const { profile } = useProfile();
 
   // Check if user can access history
   const canViewHistory = profile ? canAccessFeature(profile.subscription_tier, 'history') : false;
   const upgradeMessage = profile ? getUpgradeMessage(profile.subscription_tier, 'history') : '';
+
+  // Count pending workflows
+  const pendingCount = workflows.filter(w => w.auto_saved && w.status === 'pending').length;
 
   useEffect(() => {
     loadWorkflows();
@@ -218,6 +224,33 @@ export default function History() {
     }
   };
 
+  const handleClearAllPending = async () => {
+    if (pendingCount === 0) return;
+
+    setClearingPending(true);
+    try {
+      const clearedCount = await clearAllPendingWorkflows();
+
+      // Update local state - mark all pending auto-saved as success
+      setWorkflows(workflows.map(w =>
+        w.auto_saved && w.status === 'pending' ? { ...w, status: 'success' } : w
+      ));
+
+      toast({
+        title: '✅ All pending cleared!',
+        description: `${clearedCount} workflow${clearedCount !== 1 ? 's' : ''} marked as reviewed.`
+      });
+    } catch (error) {
+      toast({
+        title: 'Clear failed',
+        description: 'Could not clear pending workflows.',
+        variant: 'destructive'
+      });
+    } finally {
+      setClearingPending(false);
+    }
+  };
+
   // Show upgrade CTA if user doesn't have access
   if (profile && !canViewHistory) {
     return (
@@ -300,12 +333,32 @@ export default function History() {
             </Button>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Workflow History</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Workflow History</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               {workflows.length} workflow{workflows.length !== 1 ? 's' : ''} saved
+              {pendingCount > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                  <Clock className="h-4 w-4" />
+                  {pendingCount} pending review
+                </span>
+              )}
             </p>
           </div>
         </div>
+
+        {/* Clear All Pending Button */}
+        {pendingCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearAllPending}
+            disabled={clearingPending}
+            className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/20"
+          >
+            <BellOff className="h-4 w-4" />
+            {clearingPending ? 'Clearing...' : `Clear All Pending (${pendingCount})`}
+          </Button>
+        )}
       </div>
 
       {/* Workflow List */}
@@ -380,6 +433,18 @@ export default function History() {
               {/* Metadata */}
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">{workflow.platform}</Badge>
+                {workflow.auto_saved && workflow.status === 'pending' && (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Auto-saved • Pending
+                  </Badge>
+                )}
+                {workflow.auto_saved && workflow.status !== 'pending' && (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Auto-saved
+                  </Badge>
+                )}
                 {workflow.template_used && (
                   <Badge variant="outline">From Template</Badge>
                 )}

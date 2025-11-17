@@ -13,6 +13,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
 import UpgradeDialog from '@/components/UpgradeDialog';
 import { isFeatureEnabled } from '@/services/featureFlagService';
+import { getPendingWorkflowCount } from '@/services/workflowService';
 
 const navigation = [
   {
@@ -86,6 +87,7 @@ export function Sidebar() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showEnterpriseBuilder, setShowEnterpriseBuilder] = useState(false);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const [blockedFeature, setBlockedFeature] = useState<{
     name: string;
     feature: string;
@@ -98,7 +100,24 @@ export function Sidebar() {
   useEffect(() => {
     checkAdminStatus();
     checkEnterpriseBuilderFlag();
+    loadPendingCount();
   }, []);
+
+  // Reload pending count when profile changes (e.g., after login)
+  useEffect(() => {
+    if (profile) {
+      loadPendingCount();
+    }
+  }, [profile]);
+
+  const loadPendingCount = async () => {
+    try {
+      const count = await getPendingWorkflowCount();
+      setPendingCount(count);
+    } catch (error) {
+      console.error('Error loading pending count:', error);
+    }
+  };
 
   const checkAdminStatus = async () => {
     try {
@@ -187,6 +206,12 @@ export function Sidebar() {
                       )}
                     />
                     <span className="flex-1">{item.name}</span>
+                    {/* Pending count badge for History */}
+                    {item.name === 'History' && pendingCount > 0 && (
+                      <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">
+                        {pendingCount > 99 ? '99+' : pendingCount}
+                      </span>
+                    )}
                     {(item as any).comingSoon && (
                       <span className="text-[10px] bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded font-medium">
                         Soon

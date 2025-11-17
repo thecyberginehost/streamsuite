@@ -563,3 +563,106 @@ export async function getManuallySavedWorkflows(): Promise<Workflow[]> {
     throw error instanceof Error ? error : new Error('Failed to load manually saved workflows');
   }
 }
+
+// =====================================================
+// PENDING WORKFLOW NOTIFICATIONS
+// =====================================================
+
+/**
+ * Get count of pending (unreviewed) auto-saved workflows
+ * These are workflows that were auto-saved but user hasn't reviewed yet
+ */
+export async function getPendingWorkflowCount(): Promise<number> {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return 0;
+    }
+
+    const { count, error } = await supabase
+      .from('workflows')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('auto_saved', true)
+      .eq('status', 'pending');
+
+    if (error) {
+      console.error('Get pending workflow count error:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Get pending workflow count error:', error);
+    return 0;
+  }
+}
+
+/**
+ * Mark all pending auto-saved workflows as reviewed (set status to success)
+ * This clears all pending notifications
+ */
+export async function clearAllPendingWorkflows(): Promise<number> {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('You must be logged in to clear pending workflows');
+    }
+
+    // Get count first
+    const { count } = await supabase
+      .from('workflows')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('auto_saved', true)
+      .eq('status', 'pending');
+
+    // Update all pending auto-saved workflows to success
+    const { error } = await supabase
+      .from('workflows')
+      .update({ status: 'success' })
+      .eq('user_id', user.id)
+      .eq('auto_saved', true)
+      .eq('status', 'pending');
+
+    if (error) {
+      console.error('Clear pending workflows error:', error);
+      throw new Error('Failed to clear pending workflows');
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Clear pending workflows error:', error);
+    throw error instanceof Error ? error : new Error('Failed to clear pending workflows');
+  }
+}
+
+/**
+ * Get all pending (unreviewed) auto-saved workflows
+ */
+export async function getPendingWorkflows(): Promise<Workflow[]> {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('You must be logged in to view workflows');
+    }
+
+    const { data, error } = await supabase
+      .from('workflows')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('auto_saved', true)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get pending workflows error:', error);
+      throw new Error('Failed to load pending workflows');
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Get pending workflows error:', error);
+    throw error instanceof Error ? error : new Error('Failed to load pending workflows');
+  }
+}
