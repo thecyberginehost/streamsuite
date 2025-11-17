@@ -729,56 +729,6 @@ export default function GeneratorNew() {
               >
                 n8n
               </Button>
-              <div className="flex-1 relative">
-                <Button
-                  variant={platform === 'make' ? 'default' : 'outline'}
-                  onClick={() => {
-                    if (enabledWorkflowPlatforms.make) {
-                      setPlatform('make');
-                    }
-                  }}
-                  disabled={!enabledWorkflowPlatforms.make}
-                  className={cn(
-                    "w-full h-8 font-medium text-xs",
-                    !enabledWorkflowPlatforms.make && "opacity-50 cursor-not-allowed",
-                    platform === 'make'
-                      ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100"
-                      : "border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/60"
-                  )}
-                >
-                  Make.com
-                </Button>
-                {!enabledWorkflowPlatforms.make && (
-                  <Badge variant="secondary" className="absolute -top-2 -right-2 text-[8px] px-1 py-0 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">
-                    Soon
-                  </Badge>
-                )}
-              </div>
-              <div className="flex-1 relative">
-                <Button
-                  variant={platform === 'zapier' ? 'default' : 'outline'}
-                  onClick={() => {
-                    if (enabledWorkflowPlatforms.zapier) {
-                      setPlatform('zapier');
-                    }
-                  }}
-                  disabled={!enabledWorkflowPlatforms.zapier}
-                  className={cn(
-                    "w-full h-8 font-medium text-xs",
-                    !enabledWorkflowPlatforms.zapier && "opacity-50 cursor-not-allowed",
-                    platform === 'zapier'
-                      ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100"
-                      : "border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/60"
-                  )}
-                >
-                  Zapier
-                </Button>
-                {!enabledWorkflowPlatforms.zapier && (
-                  <Badge variant="secondary" className="absolute -top-2 -right-2 text-[8px] px-1 py-0 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">
-                    Soon
-                  </Badge>
-                )}
-              </div>
             </div>
           </div>
 
@@ -1047,58 +997,6 @@ export default function GeneratorNew() {
                   >
                     n8n
                   </Button>
-                  <div className="flex-1 relative">
-                    <Button
-                      variant={codePlatform === 'make' ? 'default' : 'outline'}
-                      onClick={() => {
-                        if (enabledCodePlatforms.make) {
-                          setCodePlatform('make');
-                          setCodeLanguage('javascript'); // Make.com only supports JS
-                        }
-                      }}
-                      disabled={!enabledCodePlatforms.make}
-                      className={cn(
-                        "w-full h-8 font-medium text-xs",
-                        !enabledCodePlatforms.make && "opacity-50 cursor-not-allowed",
-                        codePlatform === 'make'
-                          ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                      )}
-                    >
-                      Make.com
-                    </Button>
-                    {!enabledCodePlatforms.make && (
-                      <Badge variant="secondary" className="absolute -top-2 -right-2 text-[8px] px-1 py-0 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">
-                        Soon
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex-1 relative">
-                    <Button
-                      variant={codePlatform === 'zapier' ? 'default' : 'outline'}
-                      onClick={() => {
-                        if (enabledCodePlatforms.zapier) {
-                          setCodePlatform('zapier');
-                          // Zapier supports both JS and Python
-                        }
-                      }}
-                      disabled={!enabledCodePlatforms.zapier}
-                      className={cn(
-                        "w-full h-8 font-medium text-xs",
-                        !enabledCodePlatforms.zapier && "opacity-50 cursor-not-allowed",
-                        codePlatform === 'zapier'
-                          ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                      )}
-                    >
-                      Zapier
-                    </Button>
-                    {!enabledCodePlatforms.zapier && (
-                      <Badge variant="secondary" className="absolute -top-2 -right-2 text-[8px] px-1 py-0 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">
-                        Soon
-                      </Badge>
-                    )}
-                  </div>
                 </div>
               </div>
 
