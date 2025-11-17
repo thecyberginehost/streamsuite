@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 // Services
 import { generateWorkflow, generateWorkflowName, generateCustomCode } from '@/services/aiService';
-import { saveWorkflow } from '@/services/workflowService';
+import { saveWorkflow, autoSaveWorkflow, manuallySaveWorkflow } from '@/services/workflowService';
 import { validatePrompt } from '@/services/promptValidator';
 import { validateCodePrompt, getSecurityThreatLevel } from '@/services/codePromptValidator';
 import {
@@ -34,7 +34,7 @@ import {
 import { getEnabledWorkflowPlatforms, getEnabledCodePlatforms } from '@/services/featureFlagService';
 import { useCredits } from '@/hooks/useCredits';
 import { useProfile } from '@/hooks/useProfile';
-import { canAccessFeature, getUpgradeMessage } from '@/config/subscriptionPlans';
+import { canAccessFeature, getUpgradeMessage, hasAutoSaveHistory } from '@/config/subscriptionPlans';
 import UpgradeCTA from '@/components/UpgradeCTA';
 import UpgradeDialog from '@/components/UpgradeDialog';
 import { Coins } from 'lucide-react';
@@ -55,6 +55,7 @@ export default function GeneratorNew() {
   const [copied, setCopied] = useState(false);
   const [estimatedCredits, setEstimatedCredits] = useState(1);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [showManualSaveButton, setShowManualSaveButton] = useState(false); // For Free/Starter tiers
 
   // Copy/paste detection state
   const [promptInputMethod, setPromptInputMethod] = useState<'typed' | 'pasted' | 'mixed'>('typed');
@@ -263,11 +264,50 @@ export default function GeneratorNew() {
         node_count: result.workflow?.nodes?.length || 0
       });
 
-      toast({
-        title: '✅ Workflow generated!',
-        description: `Created in ${(timeTaken / 1000).toFixed(1)}s. You have ${newTotalBalance} credit${newTotalBalance !== 1 ? 's' : ''} remaining.`,
-        duration: 5000
-      });
+      // ✨ AUTO-SAVE LOGIC: Pro/Growth/Agency get auto-save, Free/Starter get manual save button
+      const userTier = profile?.subscription_tier || 'free';
+      const shouldAutoSave = hasAutoSaveHistory(userTier);
+
+      if (shouldAutoSave) {
+        // Auto-save for Pro/Growth/Agency
+        try {
+          await autoSaveWorkflow({
+            name,
+            description: prompt.substring(0, 200),
+            platform,
+            workflowJson: result.workflow,
+            prompt,
+            creditsUsed: actualCreditCost,
+            tokensUsed: typeof result.tokensUsed === 'object' ? result.tokensUsed.total : result.tokensUsed || 0,
+            status: 'success'
+          });
+
+          toast({
+            title: '✅ Workflow generated and saved!',
+            description: `Created in ${(timeTaken / 1000).toFixed(1)}s. Auto-saved to History. You have ${newTotalBalance} credit${newTotalBalance !== 1 ? 's' : ''} remaining.`,
+            duration: 5000
+          });
+
+          setShowManualSaveButton(false); // Hide manual save button
+        } catch (saveError) {
+          console.error('Auto-save failed:', saveError);
+          // Show success for generation, but warn about save failure
+          toast({
+            title: '✅ Workflow generated!',
+            description: `Created in ${(timeTaken / 1000).toFixed(1)}s. You have ${newTotalBalance} credit${newTotalBalance !== 1 ? 's' : ''} remaining. (Auto-save failed - click "Save to History" to retry)`,
+            duration: 5000
+          });
+          setShowManualSaveButton(true); // Show manual save button as fallback
+        }
+      } else {
+        // Show manual save button for Free/Starter
+        toast({
+          title: '✅ Workflow generated!',
+          description: `Created in ${(timeTaken / 1000).toFixed(1)}s. Click "Save to History" to keep it. You have ${newTotalBalance} credit${newTotalBalance !== 1 ? 's' : ''} remaining.`,
+          duration: 6000
+        });
+        setShowManualSaveButton(true);
+      }
 
       // Show low credits warning if applicable (only if less than 10 total credits)
       if (newTotalBalance > 0 && newTotalBalance < 10) {
@@ -355,7 +395,7 @@ export default function GeneratorNew() {
   };
 
   /**
-   * Save workflow to history
+   * Save workflow to history (Manual save for Free/Starter tiers)
    */
   const handleSaveWorkflow = async () => {
     if (!workflow) return;
@@ -377,14 +417,16 @@ export default function GeneratorNew() {
     }
 
     try {
-      await saveWorkflow({
+      // Use manuallySaveWorkflow to mark as manually saved
+      await manuallySaveWorkflow({
         name: workflowName,
         description: prompt.substring(0, 200),
         platform,
         workflowJson: workflow,
         prompt,
-        creditsUsed: 1,
-        tokensUsed: generationStats?.tokensUsed || 0
+        creditsUsed: estimatedCredits || 1,
+        tokensUsed: generationStats?.tokensUsed || 0,
+        status: 'success'
       });
 
       toast({
@@ -392,6 +434,9 @@ export default function GeneratorNew() {
         description: 'You can find it in your History page.',
         duration: 3000
       });
+
+      // Hide the save button after successful manual save
+      setShowManualSaveButton(false);
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -596,6 +641,53 @@ export default function GeneratorNew() {
           )}
         </div>
       </div>
+
+      {/* Auto-Save Status Indicator */}
+      {profile && (
+        <div className={cn(
+          "flex items-center justify-between px-4 py-2.5 rounded-lg border",
+          hasAutoSaveHistory(profile.subscription_tier)
+            ? "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/50"
+            : "bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50"
+        )}>
+          <div className="flex items-center gap-2">
+            {hasAutoSaveHistory(profile.subscription_tier) ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <div>
+                  <p className="text-sm font-semibold text-green-900 dark:text-green-100">
+                    Auto-Save Activated
+                  </p>
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    All generated workflows are automatically saved to your History
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                    Auto-Save Deactivated
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    You'll need to manually click "Save to History" after generating workflows
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          {!hasAutoSaveHistory(profile.subscription_tier) && (
+            <Button
+              size="sm"
+              onClick={() => navigate('/pricing')}
+              className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Upgrade for Auto-Save
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
@@ -815,16 +907,19 @@ export default function GeneratorNew() {
           </div>
           {workflow && (
             <div className="flex gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSaveWorkflow}
-                className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
-                title="Save to history"
-              >
-                <Save className="h-3.5 w-3.5" />
-                Save
-              </Button>
+              {/* Manual Save Button - Only show for Free/Starter or if auto-save failed */}
+              {showManualSaveButton && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveWorkflow}
+                  className="h-8 text-xs font-medium border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                  title="Save to history"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Save to History
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

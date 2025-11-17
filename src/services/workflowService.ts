@@ -30,6 +30,7 @@ export interface Workflow {
   tags: string[];
   status: 'success' | 'failed' | 'pending';
   error_message?: string;
+  auto_saved: boolean; // NEW: Whether this workflow was auto-saved (Pro+) or manually saved (Free/Starter)
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +47,7 @@ export interface SaveWorkflowRequest {
   tags?: string[];
   status?: 'success' | 'failed' | 'pending';
   errorMessage?: string;
+  autoSaved?: boolean; // NEW: Track if auto-saved (Pro+) or manually saved (Free/Starter)
 }
 
 export interface UpdateWorkflowRequest {
@@ -91,7 +93,8 @@ export async function saveWorkflow(request: SaveWorkflowRequest): Promise<Workfl
         tokens_used: request.tokensUsed || 0,
         tags: request.tags || [],
         status: request.status || 'pending',
-        error_message: request.errorMessage
+        error_message: request.errorMessage,
+        auto_saved: request.autoSaved || false // NEW: Set auto-save flag
       })
       .select()
       .single();
@@ -474,5 +477,89 @@ export async function toggleFavorite(workflowId: string): Promise<boolean> {
   } catch (error) {
     console.error('Toggle favorite error:', error);
     throw error instanceof Error ? error : new Error('Failed to toggle favorite');
+  }
+}
+
+// =====================================================
+// AUTO-SAVE HELPERS (NEW)
+// =====================================================
+
+/**
+ * Auto-save a workflow (for Pro, Growth, Agency tiers)
+ * Automatically saves after generation without user interaction
+ */
+export async function autoSaveWorkflow(request: Omit<SaveWorkflowRequest, 'autoSaved'>): Promise<Workflow> {
+  return await saveWorkflow({
+    ...request,
+    autoSaved: true
+  });
+}
+
+/**
+ * Manually save a workflow (for Free, Starter tiers)
+ * Requires explicit user action to save to history
+ */
+export async function manuallySaveWorkflow(request: Omit<SaveWorkflowRequest, 'autoSaved'>): Promise<Workflow> {
+  return await saveWorkflow({
+    ...request,
+    autoSaved: false
+  });
+}
+
+/**
+ * Get auto-saved workflows only
+ */
+export async function getAutoSavedWorkflows(): Promise<Workflow[]> {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('You must be logged in to view workflows');
+    }
+
+    const { data, error } = await supabase
+      .from('workflows')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('auto_saved', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Get auto-saved workflows error:', error);
+      throw new Error('Failed to load auto-saved workflows');
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Get auto-saved workflows error:', error);
+    throw error instanceof Error ? error : new Error('Failed to load auto-saved workflows');
+  }
+}
+
+/**
+ * Get manually saved workflows only
+ */
+export async function getManuallySavedWorkflows(): Promise<Workflow[]> {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('You must be logged in to view workflows');
+    }
+
+    const { data, error } = await supabase
+      .from('workflows')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('auto_saved', false)
+      .order('created_at', { ascending: false});
+
+    if (error) {
+      console.error('Get manually saved workflows error:', error);
+      throw new Error('Failed to load manually saved workflows');
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Get manually saved workflows error:', error);
+    throw error instanceof Error ? error : new Error('Failed to load manually saved workflows');
   }
 }

@@ -42,7 +42,7 @@ import {
   Check
 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
-import { canAccessFeature, getPlanByTier, SUBSCRIPTION_PLANS } from '@/config/subscriptionPlans';
+import { canAccessFeature, getPlanByTier, SUBSCRIPTION_PLANS, getMaxN8nConnections, canAddN8nConnection } from '@/config/subscriptionPlans';
 import {
   testN8nConnection,
   saveN8nConnection,
@@ -60,6 +60,7 @@ export default function Settings() {
   const [connectionToDelete, setConnectionToDelete] = useState<N8nConnection | null>(null);
   const [workflowsDialogOpen, setWorkflowsDialogOpen] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<N8nConnection | null>(null);
+  const [plansDialogOpen, setPlansDialogOpen] = useState(false);
 
   // Form state
   const [connectionName, setConnectionName] = useState('');
@@ -74,6 +75,13 @@ export default function Settings() {
   const { profile } = useProfile();
 
   const canAccessN8n = profile ? canAccessFeature(profile.subscription_tier, 'n8n_push') : false;
+
+  // n8n connection limits
+  const userTier = profile?.subscription_tier || 'free';
+  const maxConnections = getMaxN8nConnections(userTier);
+  const currentConnections = connections.length;
+  const canAddMore = canAddN8nConnection(userTier, currentConnections);
+  const isUnlimited = maxConnections === -1;
 
   useEffect(() => {
     loadConnections();
@@ -332,7 +340,7 @@ export default function Settings() {
                   <span>
                     Upgrade to unlock {currentPlan.id === 'free' ? 'advanced AI features' : currentPlan.id === 'starter' ? 'debugging and templates' : currentPlan.id === 'pro' ? 'batch operations and monitoring' : 'team collaboration'}
                   </span>
-                  <Button size="sm" className="ml-4">
+                  <Button size="sm" className="ml-4" onClick={() => setPlansDialogOpen(true)}>
                     View Plans
                   </Button>
                 </AlertDescription>
@@ -346,20 +354,54 @@ export default function Settings() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <CardTitle className="flex items-center gap-2">
                 <Server className="h-5 w-5" />
                 n8n Instance Connections
               </CardTitle>
               <CardDescription className="mt-2">
                 Connect your n8n instances to push workflows directly from StreamSuite
+                {canAccessN8n && maxConnections > 0 && (
+                  <span className="block mt-1 font-medium text-gray-700 dark:text-gray-300">
+                    {isUnlimited ? (
+                      `${currentConnections} connection${currentConnections !== 1 ? 's' : ''} • Unlimited`
+                    ) : (
+                      `${currentConnections}/${maxConnections} connection${maxConnections !== 1 ? 's' : ''} used`
+                    )}
+                  </span>
+                )}
               </CardDescription>
             </div>
             {canAccessN8n ? (
-              <Button onClick={() => setAddDialogOpen(true)} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Connection
-              </Button>
+              <div className="flex flex-col items-end gap-2">
+                <Button
+                  onClick={() => {
+                    if (!canAddMore) {
+                      // Show upgrade toast
+                      const nextTier = userTier === 'pro' ? 'Growth' : 'Agency';
+                      const nextLimit = userTier === 'pro' ? '3 connections' : 'unlimited connections';
+                      toast({
+                        title: '⚠️ Connection Limit Reached',
+                        description: `You've reached your ${userTier} plan limit of ${maxConnections} connection${maxConnections !== 1 ? 's' : ''}. Upgrade to ${nextTier} for ${nextLimit}.`,
+                        variant: 'destructive',
+                        duration: 6000
+                      });
+                    } else {
+                      setAddDialogOpen(true);
+                    }
+                  }}
+                  size="sm"
+                  disabled={!canAddMore}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Connection
+                </Button>
+                {!canAddMore && (
+                  <span className="text-xs text-amber-600 dark:text-amber-400">
+                    Limit reached
+                  </span>
+                )}
+              </div>
             ) : (
               <Badge variant="outline" className="text-purple-600 border-purple-300">
                 PRO
@@ -387,6 +429,13 @@ export default function Settings() {
               <Server className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 No n8n connections yet
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                {isUnlimited ? (
+                  'Unlimited connections available'
+                ) : (
+                  `You can add up to ${maxConnections} connection${maxConnections !== 1 ? 's' : ''}`
+                )}
               </p>
               <Button onClick={() => setAddDialogOpen(true)} variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
@@ -615,6 +664,115 @@ export default function Settings() {
           connectionName={selectedConnection.connection_name}
         />
       )}
+
+      {/* Plans Comparison Dialog */}
+      <Dialog open={plansDialogOpen} onOpenChange={setPlansDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Choose Your Plan</DialogTitle>
+            <DialogDescription>
+              Compare features and select the plan that's right for you
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+            {Object.values(SUBSCRIPTION_PLANS)
+              .filter(plan => plan.id !== 'enterprise') // Skip enterprise for now
+              .map((plan) => {
+                const isCurrentPlan = plan.id === currentPlan.id;
+                const isUpgrade = plan.price.monthly > currentPlan.price.monthly;
+
+                return (
+                  <div
+                    key={plan.id}
+                    className={`relative rounded-lg border p-4 transition-all ${
+                      isCurrentPlan
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    {/* Current Plan Badge */}
+                    {isCurrentPlan && (
+                      <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary">
+                        Current Plan
+                      </Badge>
+                    )}
+
+                    {/* Plan Header */}
+                    <div className="text-center mb-4 pt-2">
+                      <h3 className="text-lg font-bold">{plan.displayName}</h3>
+                      <div className="mt-2">
+                        <span className="text-3xl font-bold">
+                          {plan.price.monthly === 0 ? 'Free' : `$${plan.price.monthly}`}
+                        </span>
+                        {plan.price.monthly > 0 && (
+                          <span className="text-sm text-gray-500">/month</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {plan.credits.monthly} credits/month
+                        {plan.batchCredits && (
+                          <span className="block text-xs">
+                            + {plan.batchCredits.monthly} batch credits
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Key Features */}
+                    <div className="space-y-2 mb-4">
+                      {plan.features.slice(0, 5).map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs">
+                          <Check className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                        </div>
+                      ))}
+                      {plan.features.length > 5 && (
+                        <p className="text-xs text-gray-500 pl-5">
+                          +{plan.features.length - 5} more features
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="mt-auto">
+                      {isCurrentPlan ? (
+                        <Button variant="outline" className="w-full" disabled>
+                          <Check className="mr-2 h-4 w-4" />
+                          Current Plan
+                        </Button>
+                      ) : isUpgrade ? (
+                        <Button
+                          className="w-full"
+                          onClick={() => {
+                            setPlansDialogOpen(false);
+                            // Navigate to pricing page for checkout
+                            window.location.href = '/pricing';
+                          }}
+                        >
+                          Upgrade to {plan.displayName}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" className="w-full" disabled>
+                          Downgrade
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          <DialogFooter className="border-t pt-4">
+            <p className="text-xs text-gray-500 flex-1">
+              All plans include 20% savings on yearly billing. Cancel anytime within 7 days for a full refund.
+            </p>
+            <Button variant="outline" onClick={() => setPlansDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

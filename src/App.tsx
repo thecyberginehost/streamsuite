@@ -31,7 +31,20 @@ import AgencyDocs from "./pages/AgencyDocs";
 import EnterpriseBuilder from "./pages/EnterpriseBuilder";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Prevent refetching when user switches browser tabs
+      refetchOnWindowFocus: false,
+      // Prevent refetching when network reconnects
+      refetchOnReconnect: false,
+      // Keep data fresh for 5 minutes before considering it stale
+      staleTime: 5 * 60 * 1000,
+      // Retry failed requests only once
+      retry: 1,
+    },
+  },
+});
 
 /**
  * Determine which domain we're on
