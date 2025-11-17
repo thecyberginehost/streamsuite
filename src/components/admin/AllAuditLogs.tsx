@@ -56,12 +56,15 @@ export default function AllAuditLogs() {
   const loadLogs = async () => {
     setLoading(true);
     try {
+      console.log('[AllAuditLogs] Loading logs with filters:', filters);
       const data = await getAllAuditLogs(1000, 0, {
-        severity: filters.severity || undefined,
+        // Don't pass 'all' as a filter value - it should be undefined to get all
+        severity: filters.severity && filters.severity !== 'all' ? filters.severity : undefined,
         eventType: filters.eventType || undefined,
         startDate: filters.startDate || undefined,
         endDate: filters.endDate || undefined,
       });
+      console.log('[AllAuditLogs] Loaded', data.length, 'logs');
       setLogs(data);
     } catch (error) {
       console.error('Failed to load audit logs:', error);
@@ -330,8 +333,20 @@ export default function AllAuditLogs() {
             ))}
 
             {logs.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No audit logs found
+              <div className="text-center py-8 text-muted-foreground space-y-4">
+                <p className="font-medium">No audit logs found</p>
+                <div className="text-sm text-left max-w-md mx-auto space-y-2">
+                  <p>Possible reasons:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>No actions have been logged yet</li>
+                    <li>RLS policy issue - check browser console for errors</li>
+                    <li>Your user may not have <code className="bg-muted px-1 rounded">is_admin = true</code> in profiles table</li>
+                    <li>Migration 019 may not have been applied</li>
+                  </ul>
+                  <p className="mt-4">
+                    Run <code className="bg-muted px-1 rounded">await testAuditLogging()</code> in the browser console to diagnose.
+                  </p>
+                </div>
               </div>
             )}
           </div>

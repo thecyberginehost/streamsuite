@@ -466,7 +466,11 @@ export default function GeneratorNew() {
     if (!validation.isValid) {
       // Log blocked attempt
       const threatLevel = getSecurityThreatLevel(codePrompt);
-      await logBlocked('code_generation', validation.reason || 'Invalid request', {
+      await logBlocked('workflow_generation', {
+        type: validation.category === 'security_threat' ? 'injection' : 'suspicious',
+        severity: threatLevel === 'high' ? 'high' : threatLevel === 'medium' ? 'medium' : 'low',
+        details: validation.reason || 'Invalid code generation request'
+      }, {
         type: 'code_generation',
         category: validation.category,
         platform: codePlatform,

@@ -358,6 +358,9 @@ export async function getAllAuditLogs(
     endDate?: string;
   }
 ): Promise<any[]> {
+  console.log('[AuditService] Fetching all audit logs with filters:', filters);
+
+  // First try with profile join
   let query = supabase
     .from('audit_logs')
     .select(`
@@ -371,7 +374,7 @@ export async function getAllAuditLogs(
     .range(offset, offset + limit - 1);
 
   // Apply filters if provided
-  if (filters?.severity) {
+  if (filters?.severity && filters.severity !== 'all') {
     query = query.eq('threat_severity', filters.severity);
   }
 
@@ -391,9 +394,31 @@ export async function getAllAuditLogs(
 
   if (error) {
     console.error('[AuditService] Failed to fetch all audit logs:', error);
-    return [];
+    console.error('[AuditService] Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+
+    // If join failed, try without the profile join (might be RLS issue on profiles table)
+    console.log('[AuditService] Retrying without profile join...');
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (fallbackError) {
+      console.error('[AuditService] Fallback query also failed:', fallbackError);
+      return [];
+    }
+
+    console.log('[AuditService] Fallback successful, found', fallbackData?.length || 0, 'logs');
+    return fallbackData || [];
   }
 
+  console.log('[AuditService] Successfully fetched', data?.length || 0, 'audit logs');
   return data || [];
 }
 
@@ -795,4 +820,99 @@ export function formatActionType(actionType: ActionType): string {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+/**
+ * Diagnostic function to test audit logging
+ * Call from browser console: await testAuditLogging()
+ */
+export async function testAuditLogging(): Promise<{
+  success: boolean;
+  insertTest: { success: boolean; error?: string };
+  selectTest: { success: boolean; count?: number; error?: string };
+  userInfo: { userId?: string; isAdmin?: boolean };
+}> {
+  const result = {
+    success: false,
+    insertTest: { success: false, error: undefined as string | undefined },
+    selectTest: { success: false, count: undefined as number | undefined, error: undefined as string | undefined },
+    userInfo: { userId: undefined as string | undefined, isAdmin: undefined as boolean | undefined }
+  };
+
+  try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      result.insertTest.error = 'No user logged in';
+      result.selectTest.error = 'No user logged in';
+      console.error('[AuditService Test] No user logged in');
+      return result;
+    }
+    result.userInfo.userId = user.id;
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+    result.userInfo.isAdmin = profile?.is_admin || false;
+
+    console.log('[AuditService Test] User ID:', user.id);
+    console.log('[AuditService Test] Is Admin:', result.userInfo.isAdmin);
+
+    // Test INSERT
+    const testLogEntry = {
+      user_id: user.id,
+      action_type: 'page_view' as ActionType,
+      action_status: 'success' as ActionStatus,
+      action_details: { test: true, timestamp: new Date().toISOString() },
+      event_id: `TEST-${Date.now()}`,
+      threat_detected: false
+    };
+
+    console.log('[AuditService Test] Attempting INSERT...');
+    const { error: insertError } = await supabase
+      .from('audit_logs')
+      .insert(testLogEntry);
+
+    if (insertError) {
+      result.insertTest.error = insertError.message;
+      console.error('[AuditService Test] INSERT failed:', insertError);
+    } else {
+      result.insertTest.success = true;
+      console.log('[AuditService Test] INSERT successful');
+    }
+
+    // Test SELECT (only works if user is admin)
+    console.log('[AuditService Test] Attempting SELECT...');
+    const { data: selectData, error: selectError } = await supabase
+      .from('audit_logs')
+      .select('id, action_type, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (selectError) {
+      result.selectTest.error = selectError.message;
+      console.error('[AuditService Test] SELECT failed:', selectError);
+    } else {
+      result.selectTest.success = true;
+      result.selectTest.count = selectData?.length || 0;
+      console.log('[AuditService Test] SELECT successful, found', result.selectTest.count, 'logs');
+    }
+
+    result.success = result.insertTest.success;
+
+    console.log('[AuditService Test] Final result:', result);
+    return result;
+  } catch (error) {
+    console.error('[AuditService Test] Unexpected error:', error);
+    result.insertTest.error = error instanceof Error ? error.message : 'Unknown error';
+    return result;
+  }
+}
+
+// Make it available globally for testing
+if (typeof window !== 'undefined') {
+  (window as any).testAuditLogging = testAuditLogging;
 }
