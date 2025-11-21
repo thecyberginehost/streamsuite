@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { GenerationProvider } from "@/contexts/GenerationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Generator from "./pages/Generator";
 import Converter from "./pages/Converter";
@@ -18,7 +17,6 @@ import Settings from "./pages/Settings";
 import Monitoring from "./pages/Monitoring";
 import WorkflowAnalytics from "./pages/WorkflowAnalytics";
 import Docs from "./pages/Docs";
-import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -83,8 +81,6 @@ const App = () => {
                 {/* Marketing Domain Routes (streamsuite.io) */}
                 {currentDomain === 'marketing' && (
                   <>
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/pricing" element={<Pricing />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<SignUp />} />
                     <Route path="*" element={<NotFound />} />
@@ -126,7 +122,6 @@ const App = () => {
                 {currentDomain === 'agency' && (
                   <>
                     {/* Public routes */}
-                    <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<SignUp />} />
 
