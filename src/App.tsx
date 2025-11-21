@@ -95,12 +95,11 @@ const App = () => {
                 {currentDomain === 'app' && (
                   <>
                     {/* Public routes */}
-                    <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<SignUp />} />
 
                     {/* App Pages (logged-in users) */}
-                    <Route path="/app" element={
+                    <Route path="/" element={
                       <ProtectedRoute>
                         <Dashboard />
                       </ProtectedRoute>
