@@ -854,62 +854,62 @@ export default function GeneratorNew() {
 
       {/* RIGHT SIDE - Output */}
       <div className="w-1/2 flex flex-col gap-4 min-h-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Output</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Generated workflow JSON</p>
-          </div>
-          {workflow && (
-            <div className="flex gap-1.5">
-              {/* Manual Save Button - Only show for Free/Starter or if auto-save failed */}
-              {showManualSaveButton && (
+        <Card className="flex-1 p-4 flex flex-col min-h-0 overflow-hidden shadow-none border-gray-200/80 dark:border-gray-800/50 dark:bg-[#0d0d0d]">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Output</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Generated workflow JSON</p>
+            </div>
+            {workflow && (
+              <div className="flex gap-1.5">
+                {/* Manual Save Button - Only show for Free/Starter or if auto-save failed */}
+                {showManualSaveButton && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveWorkflow}
+                    className="h-8 text-xs font-medium border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                    title="Save to history"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    Save to History
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleSaveWorkflow}
-                  className="h-8 text-xs font-medium border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                  title="Save to history"
+                  onClick={copyWorkflow}
+                  className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                  title="Copy JSON"
                 >
-                  <Save className="h-3.5 w-3.5" />
-                  Save to History
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5 text-green-600" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  Copy
                 </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyWorkflow}
-                className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
-                title="Copy JSON"
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5 text-green-600" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                Copy
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={downloadWorkflow}
-                className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
-                title="Download JSON"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Download
-              </Button>
-              <PushToN8nButton
-                workflowName={workflowName || 'Generated Workflow'}
-                workflowJson={workflow}
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
-              />
-            </div>
-          )}
-        </div>
-
-        <Card className="flex-1 p-4 flex flex-col min-h-0 overflow-hidden shadow-none border-gray-200/80 dark:border-gray-800/50">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadWorkflow}
+                  className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                  title="Download JSON"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download
+                </Button>
+                <PushToN8nButton
+                  workflowName={workflowName || 'Generated Workflow'}
+                  workflowJson={workflow}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs font-medium border-gray-200/80 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                />
+              </div>
+            )}
+          </div>
           {!workflow && !loading && (
             <div className="flex-1 flex items-center justify-center text-center bg-gray-50 dark:bg-[#0d0d0d] rounded-md border border-dashed border-gray-200/80 dark:border-gray-800/50">
               <div className="space-y-2 px-6">

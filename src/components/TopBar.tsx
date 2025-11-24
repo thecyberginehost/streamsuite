@@ -7,7 +7,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
-import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,8 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Coins, LogOut, User, Menu, Moon, Sun } from 'lucide-react';
+import { Coins, LogOut, Menu } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
@@ -32,10 +30,8 @@ interface Profile {
 export function TopBar() {
   const { user, signOut } = useAuth();
   const { balance, loading: creditsLoading } = useCredits();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -55,8 +51,6 @@ export function TopBar() {
       setProfile(data);
     } catch (error) {
       console.error('Failed to load profile:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -92,23 +86,8 @@ export function TopBar() {
             {/* Can add breadcrumbs or page title here */}
           </div>
 
-          {/* Right side - Theme Toggle, Credits and User Menu */}
+          {/* Right side - Credits and User Menu */}
           <div className="flex items-center gap-2">
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="h-8 w-8 px-0 hover:bg-gray-100 dark:hover:bg-gray-800/60"
-              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            >
-              {theme === 'light' ? (
-                <Moon className="h-3.5 w-3.5 text-gray-600" />
-              ) : (
-                <Sun className="h-3.5 w-3.5 text-gray-400" />
-              )}
-            </Button>
-
             {/* Credit Balance - shows regular + bonus breakdown */}
             {!creditsLoading && balance && (
               <>

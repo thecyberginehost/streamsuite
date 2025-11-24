@@ -744,7 +744,7 @@ ${workflowSet.some(w => w.dependsOn && w.dependsOn.length > 0) ? '\n⚠️ Note:
         </div>
 
         {/* Right Panel - Code Preview */}
-        <div className="w-1/2 flex flex-col bg-gray-900 h-full overflow-hidden">
+        <div className="w-1/2 flex flex-col bg-gray-900 overflow-hidden">
           {/* Preview Header */}
           <div className="flex-none bg-gray-800 px-6 py-3 border-b border-gray-700 flex items-center justify-between">
             <div className="flex items-center gap-2">
