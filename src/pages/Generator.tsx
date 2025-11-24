@@ -49,11 +49,23 @@ export default function GeneratorNew() {
         const parsed = JSON.parse(saved);
         // Only restore if saved within last 24 hours
         if (parsed.timestamp && Date.now() - parsed.timestamp < 86400000) {
+          console.log('✅ [Generator] Restored state from localStorage:', {
+            hasPrompt: !!parsed.prompt,
+            hasWorkflow: !!parsed.workflow,
+            hasCodePrompt: !!parsed.codePrompt,
+            hasGeneratedCode: !!parsed.generatedCode,
+            activeTab: parsed.activeTab,
+            ageMinutes: Math.round((Date.now() - parsed.timestamp) / 60000)
+          });
           return parsed;
+        } else {
+          console.log('⏰ [Generator] Saved state expired (older than 24 hours)');
         }
+      } else {
+        console.log('📝 [Generator] No saved state found in localStorage');
       }
     } catch (e) {
-      console.error('Failed to parse saved generator state:', e);
+      console.error('❌ [Generator] Failed to parse saved generator state:', e);
     }
     return null;
   };
@@ -136,6 +148,12 @@ export default function GeneratorNew() {
       timestamp: Date.now()
     };
     localStorage.setItem('generatorState', JSON.stringify(stateToSave));
+    console.log('💾 [Generator] Saved state to localStorage:', {
+      hasPrompt: !!prompt,
+      hasWorkflow: !!workflow,
+      hasCodePrompt: !!codePrompt,
+      hasGeneratedCode: !!generatedCode
+    });
   }, [activeTab, prompt, platform, workflow, workflowName, generationStats, codePrompt, codePlatform, codeLanguage, generatedCode]);
 
   // Load feature flags on mount
