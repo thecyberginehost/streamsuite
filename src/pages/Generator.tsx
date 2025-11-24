@@ -5,7 +5,7 @@
  * No page scrolling - only output window scrolls
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,10 +41,9 @@ import { Coins } from 'lucide-react';
 import { logSuccess, logFailure, logBlocked } from '@/services/auditService';
 
 export default function GeneratorNew() {
-  console.log('🚀 [Generator] Component mounting/rendering');
-
-  // Helper function to load saved state from localStorage
-  const loadSavedState = () => {
+  // Use useMemo to load state only once on mount, not on every render
+  const savedState = useMemo(() => {
+    console.log('🚀 [Generator] Loading initial state from localStorage');
     try {
       const saved = localStorage.getItem('generatorState');
       if (saved) {
@@ -70,9 +69,7 @@ export default function GeneratorNew() {
       console.error('❌ [Generator] Failed to parse saved generator state:', e);
     }
     return null;
-  };
-
-  const savedState = loadSavedState();
+  }, []); // Empty deps = only run once on mount
 
   // State management with localStorage persistence
   const [activeTab, setActiveTab] = useState(savedState?.activeTab || 'workflow');
@@ -121,6 +118,9 @@ export default function GeneratorNew() {
   const { balance } = useCredits();
   const { profile } = useProfile();
 
+  // Track if this is the first render to avoid saving on mount
+  const isFirstRender = useRef(true);
+
   // Check if user can access code generation
   const canGenerateCode = profile ? canAccessFeature(profile.subscription_tier, 'code_generation') : false;
   const codeGenUpgradeMessage = profile ? getUpgradeMessage(profile.subscription_tier, 'code_generation') : '';
@@ -134,8 +134,14 @@ export default function GeneratorNew() {
     setActiveTab(newTab);
   };
 
-  // Save state to localStorage whenever key values change
+  // Save state to localStorage whenever key values change (but skip first render)
   useEffect(() => {
+    // Skip saving on initial mount/render to avoid overwriting with empty state
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     try {
       const stateToSave = {
         activeTab,
