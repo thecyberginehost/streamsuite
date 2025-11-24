@@ -120,7 +120,7 @@ export default function Monitoring() {
                     Add your first n8n connection in Settings to start monitoring
                   </p>
                   <Button
-                    onClick={() => window.location.href = '/settings'}
+                    onClick={() => navigate('/app/settings')}
                     variant="outline"
                   >
                     Go to Settings
