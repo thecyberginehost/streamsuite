@@ -7,6 +7,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { creditEvents } from '@/hooks/useCredits';
 
+// Cache admin status to avoid excessive checks
+let adminStatusCache: { userId: string; isAdmin: boolean; timestamp: number } | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export interface AdminUser {
   id: string;
   email: string;
@@ -35,20 +39,26 @@ export interface UserActivity {
 }
 
 /**
- * Check if current user is admin
+ * Check if current user is admin (with caching)
  */
 export async function isAdmin(): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    console.log('[isAdmin] No user logged in');
     return false;
   }
 
-  console.log('[isAdmin] Checking admin status for user:', user.id);
+  // Check cache first
+  if (adminStatusCache &&
+      adminStatusCache.userId === user.id &&
+      Date.now() - adminStatusCache.timestamp < CACHE_DURATION) {
+    return adminStatusCache.isAdmin;
+  }
 
   // Use RPC function to bypass RLS and check admin status
   const { data, error } = await supabase
     .rpc('is_user_admin', { user_id: user.id });
+
+  let result = false;
 
   if (error) {
     console.error('[isAdmin] RPC error:', error);
@@ -61,15 +71,22 @@ export async function isAdmin(): Promise<boolean> {
 
     if (profileError) {
       console.error('[isAdmin] Profile query error:', profileError);
-      return false;
+      result = false;
+    } else {
+      result = profile?.is_admin || false;
     }
-
-    console.log('[isAdmin] Fallback profile result:', profile);
-    return profile?.is_admin || false;
+  } else {
+    result = data || false;
   }
 
-  console.log('[isAdmin] RPC result:', data);
-  return data || false;
+  // Cache the result
+  adminStatusCache = {
+    userId: user.id,
+    isAdmin: result,
+    timestamp: Date.now()
+  };
+
+  return result;
 }
 
 /**
