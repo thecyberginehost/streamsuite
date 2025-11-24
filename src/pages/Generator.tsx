@@ -41,6 +41,8 @@ import { Coins } from 'lucide-react';
 import { logSuccess, logFailure, logBlocked } from '@/services/auditService';
 
 export default function GeneratorNew() {
+  console.log('🚀 [Generator] Component mounting/rendering');
+
   // Helper function to load saved state from localStorage
   const loadSavedState = () => {
     try {
@@ -134,26 +136,31 @@ export default function GeneratorNew() {
 
   // Save state to localStorage whenever key values change
   useEffect(() => {
-    const stateToSave = {
-      activeTab,
-      prompt,
-      platform,
-      workflow,
-      workflowName,
-      generationStats,
-      codePrompt,
-      codePlatform,
-      codeLanguage,
-      generatedCode,
-      timestamp: Date.now()
-    };
-    localStorage.setItem('generatorState', JSON.stringify(stateToSave));
-    console.log('💾 [Generator] Saved state to localStorage:', {
-      hasPrompt: !!prompt,
-      hasWorkflow: !!workflow,
-      hasCodePrompt: !!codePrompt,
-      hasGeneratedCode: !!generatedCode
-    });
+    try {
+      const stateToSave = {
+        activeTab,
+        prompt,
+        platform,
+        workflow,
+        workflowName,
+        generationStats,
+        codePrompt,
+        codePlatform,
+        codeLanguage,
+        generatedCode,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('generatorState', JSON.stringify(stateToSave));
+      console.log('💾 [Generator] Saved state to localStorage:', {
+        hasPrompt: !!prompt,
+        hasWorkflow: !!workflow,
+        hasCodePrompt: !!codePrompt,
+        hasGeneratedCode: !!generatedCode,
+        promptLength: prompt?.length || 0
+      });
+    } catch (error) {
+      console.error('❌ [Generator] Failed to save state to localStorage:', error);
+    }
   }, [activeTab, prompt, platform, workflow, workflowName, generationStats, codePrompt, codePlatform, codeLanguage, generatedCode]);
 
   // Load feature flags on mount
