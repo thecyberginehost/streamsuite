@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
+import { useBatchCredits } from '@/hooks/useBatchCredits';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ interface Profile {
 export function TopBar() {
   const { user, signOut } = useAuth();
   const { balance, loading: creditsLoading } = useCredits();
+  const { balance: batchCredits, isLoading: batchCreditsLoading } = useBatchCredits();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -120,6 +122,17 @@ export function TopBar() {
                     )}
                   </div>
                 </div>
+
+                {/* Batch Credits */}
+                {!batchCreditsLoading && batchCredits !== undefined && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-md border border-purple-200/80 dark:border-purple-700/50">
+                    <Coins className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                    <span className="font-medium text-xs text-purple-900 dark:text-purple-100">
+                      {batchCredits}
+                    </span>
+                    <span className="text-[10px] text-purple-700 dark:text-purple-300">batch</span>
+                  </div>
+                )}
 
                 {/* Show Upgrade button for free tier or low credits */}
                 {(balance.subscription_tier === 'free' || balance.total_credits < 5) && (
