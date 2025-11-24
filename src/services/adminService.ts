@@ -14,6 +14,7 @@ export interface AdminUser {
   subscription_tier: string;
   credits_remaining: number;
   bonus_credits: number;
+  batch_credits: number;
   total_credits: number;
   is_admin: boolean;
   created_at: string;
@@ -98,9 +99,24 @@ export async function getAllUsers(): Promise<AdminUser[]> {
     console.error('Error fetching auth users:', authError);
   }
 
-  // Merge profile and auth data
+  // Get batch credits for all users
+  const userIds = profiles.map(p => p.id);
+  const batchCreditsMap = new Map<string, number>();
+
+  for (const userId of userIds) {
+    const { data: batchCredits, error: batchError } = await supabase
+      .rpc('get_user_batch_credits', { p_user_id: userId });
+
+    if (!batchError && batchCredits !== null) {
+      batchCreditsMap.set(userId, batchCredits);
+    }
+  }
+
+  // Merge profile, auth, and batch credits data
   const users: AdminUser[] = profiles.map(profile => {
     const authUser = authUsers?.find(u => u.id === profile.id);
+    const batchCredits = batchCreditsMap.get(profile.id) || 0;
+
     return {
       id: profile.id,
       email: profile.email,
@@ -108,6 +124,7 @@ export async function getAllUsers(): Promise<AdminUser[]> {
       subscription_tier: profile.subscription_tier || 'free',
       credits_remaining: profile.credits_remaining || 0,
       bonus_credits: profile.bonus_credits || 0,
+      batch_credits: batchCredits,
       total_credits: (profile.credits_remaining || 0) + (profile.bonus_credits || 0),
       is_admin: profile.is_admin || false,
       created_at: profile.created_at,
@@ -163,7 +180,7 @@ export async function updateUserPlan(
 export async function addCreditsToUser(
   userId: string,
   amount: number,
-  type: 'regular' | 'bonus',
+  type: 'regular' | 'batch',
   reason: string
 ): Promise<void> {
   const adminCheck = await isAdmin();
@@ -175,44 +192,87 @@ export async function addCreditsToUser(
     throw new Error('Credit amount must be positive');
   }
 
-  // Get current balance
-  const { data: profile, error: fetchError } = await supabase
-    .from('profiles')
-    .select('credits_remaining, bonus_credits')
-    .eq('id', userId)
-    .single();
-
-  if (fetchError) {
-    console.error('Error fetching user profile:', fetchError);
-    throw new Error('Failed to fetch user profile');
+  const { data: { user: adminUser } } = await supabase.auth.getUser();
+  if (!adminUser) {
+    throw new Error('Admin user not found');
   }
-
-  // Update appropriate credit type
-  const updates: any = {
-    updated_at: new Date().toISOString(),
-  };
 
   if (type === 'regular') {
-    updates.credits_remaining = (profile.credits_remaining || 0) + amount;
+    // Add regular credits using existing credit service
+    const { data: profile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('credits_remaining')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching user profile:', fetchError);
+      throw new Error('Failed to fetch user profile');
+    }
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        credits_remaining: (profile.credits_remaining || 0) + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error adding regular credits:', updateError);
+      throw new Error('Failed to add regular credits');
+    }
+
+    // Log to credit_transactions
+    const { error: logError } = await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        operation_type: 'admin_grant',
+        credits_used: -amount, // Negative means credits added
+        credit_type: 'regular',
+        balance_after: (profile.credits_remaining || 0) + amount,
+        metadata: { reason, admin_user_id: adminUser.id },
+      });
+
+    if (logError) {
+      console.error('Error logging regular credit transaction:', logError);
+    }
   } else {
-    updates.bonus_credits = (profile.bonus_credits || 0) + amount;
-  }
+    // Add batch credits using RPC function
+    const { error: batchError } = await supabase.rpc('add_batch_credits', {
+      p_user_id: userId,
+      p_amount: amount,
+      p_operation_type: 'admin_adjustment',
+      p_metadata: { reason, admin_user_id: adminUser.id },
+    });
 
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', userId);
-
-  if (updateError) {
-    console.error('Error adding credits:', updateError);
-    throw new Error('Failed to add credits');
+    if (batchError) {
+      console.error('Error adding batch credits:', batchError);
+      throw new Error('Failed to add batch credits');
+    }
   }
 
   // Emit credit change event to refresh UI
   creditEvents.emit();
 
-  // Log the admin action
-  console.log(`Admin added ${amount} ${type} credits to user ${userId}: ${reason}`);
+  // Log the admin action to console and audit logs
+  console.log(`Admin ${adminUser.email} added ${amount} ${type} credits to user ${userId}: ${reason}`);
+
+  // Log to audit_logs table
+  await supabase
+    .from('audit_logs')
+    .insert({
+      user_id: adminUser.id,
+      event_type: 'admin_credit_grant',
+      severity: 'info',
+      metadata: {
+        target_user_id: userId,
+        amount,
+        credit_type: type,
+        reason,
+      },
+    });
 }
 
 /**

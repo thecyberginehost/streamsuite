@@ -466,7 +466,7 @@ export default function Admin() {
               <TableHead className="text-xs font-medium">Name</TableHead>
               <TableHead className="text-xs font-medium">Plan</TableHead>
               <TableHead className="text-xs font-medium">Regular Credits</TableHead>
-              <TableHead className="text-xs font-medium">Bonus Credits</TableHead>
+              <TableHead className="text-xs font-medium">Batch Credits</TableHead>
               <TableHead className="text-xs font-medium">Total</TableHead>
               <TableHead className="text-xs font-medium">Joined</TableHead>
               <TableHead className="text-xs font-medium text-right">Actions</TableHead>
@@ -494,8 +494,8 @@ export default function Admin() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs">{user.credits_remaining}</TableCell>
-                <TableCell className="text-xs text-amber-600 dark:text-amber-400">
-                  {user.bonus_credits}
+                <TableCell className="text-xs text-purple-600 dark:text-purple-400">
+                  {user.batch_credits}
                 </TableCell>
                 <TableCell className="text-xs font-medium">{user.total_credits}</TableCell>
                 <TableCell className="text-xs text-gray-500">
@@ -619,7 +619,7 @@ export default function Admin() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="regular">Regular Credits (expire monthly)</SelectItem>
-                  <SelectItem value="bonus">Bonus Credits (never expire)</SelectItem>
+                  <SelectItem value="batch">Batch Credits (for batch workflow generation)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
