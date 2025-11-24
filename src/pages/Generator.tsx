@@ -41,17 +41,36 @@ import { Coins } from 'lucide-react';
 import { logSuccess, logFailure, logBlocked } from '@/services/auditService';
 
 export default function GeneratorNew() {
-  // State management
-  const [activeTab, setActiveTab] = useState('workflow');
-  const [prompt, setPrompt] = useState('');
-  const [platform, setPlatform] = useState<'n8n' | 'make' | 'zapier'>('n8n');
+  // Helper function to load saved state from localStorage
+  const loadSavedState = () => {
+    try {
+      const saved = localStorage.getItem('generatorState');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Only restore if saved within last 24 hours
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 86400000) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse saved generator state:', e);
+    }
+    return null;
+  };
+
+  const savedState = loadSavedState();
+
+  // State management with localStorage persistence
+  const [activeTab, setActiveTab] = useState(savedState?.activeTab || 'workflow');
+  const [prompt, setPrompt] = useState(savedState?.prompt || '');
+  const [platform, setPlatform] = useState<'n8n' | 'make' | 'zapier'>(savedState?.platform || 'n8n');
   const [loading, setLoading] = useState(false);
-  const [workflow, setWorkflow] = useState<any>(null);
-  const [workflowName, setWorkflowName] = useState('');
+  const [workflow, setWorkflow] = useState<any>(savedState?.workflow || null);
+  const [workflowName, setWorkflowName] = useState(savedState?.workflowName || '');
   const [generationStats, setGenerationStats] = useState<{
     tokensUsed: number;
     timeTaken: number;
-  } | null>(null);
+  } | null>(savedState?.generationStats || null);
   const [copied, setCopied] = useState(false);
   const [estimatedCredits, setEstimatedCredits] = useState(1);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
@@ -63,11 +82,11 @@ export default function GeneratorNew() {
   const [codePromptInputMethod, setCodePromptInputMethod] = useState<'typed' | 'pasted' | 'mixed'>('typed');
   const [codePromptPasteCount, setCodePromptPasteCount] = useState(0);
 
-  // Code generator state
-  const [codePrompt, setCodePrompt] = useState('');
-  const [codePlatform, setCodePlatform] = useState<'n8n' | 'make' | 'zapier'>('n8n');
-  const [codeLanguage, setCodeLanguage] = useState<'javascript' | 'python'>('javascript');
-  const [generatedCode, setGeneratedCode] = useState('');
+  // Code generator state with localStorage persistence
+  const [codePrompt, setCodePrompt] = useState(savedState?.codePrompt || '');
+  const [codePlatform, setCodePlatform] = useState<'n8n' | 'make' | 'zapier'>(savedState?.codePlatform || 'n8n');
+  const [codeLanguage, setCodeLanguage] = useState<'javascript' | 'python'>(savedState?.codeLanguage || 'javascript');
+  const [generatedCode, setGeneratedCode] = useState(savedState?.generatedCode || '');
   const [codeLoading, setCodeLoading] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
@@ -100,6 +119,24 @@ export default function GeneratorNew() {
     }
     setActiveTab(newTab);
   };
+
+  // Save state to localStorage whenever key values change
+  useEffect(() => {
+    const stateToSave = {
+      activeTab,
+      prompt,
+      platform,
+      workflow,
+      workflowName,
+      generationStats,
+      codePrompt,
+      codePlatform,
+      codeLanguage,
+      generatedCode,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('generatorState', JSON.stringify(stateToSave));
+  }, [activeTab, prompt, platform, workflow, workflowName, generationStats, codePrompt, codePlatform, codeLanguage, generatedCode]);
 
   // Load feature flags on mount
   useEffect(() => {
