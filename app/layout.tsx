@@ -2,19 +2,19 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'StreamSuite — Real-Time Solana Market Intelligence',
-  description: 'Wallet reputation scores, influencer accountability, ML-driven market signals. Open-source intelligence platform for Solana memecoin markets.',
+  title: 'StreamSuite — Open-Source Developer Tooling for Solana',
+  description: 'Free APIs and SDKs for Solana trade data, wallet reputation scores, influencer PnL, and ML signals. Open-source developer tooling for the Solana ecosystem.',
   openGraph: {
-    title: 'StreamSuite — Real-Time Solana Market Intelligence',
-    description: 'Wallet reputation scores, influencer accountability, ML-driven market signals. Open-source intelligence platform for Solana memecoin markets.',
+    title: 'StreamSuite — Open-Source Developer Tooling for Solana',
+    description: 'Free APIs and SDKs for Solana trade data, wallet reputation scores, influencer PnL, and ML signals. Open-source developer tooling for the Solana ecosystem.',
     url: 'https://streamsuite.io',
     siteName: 'StreamSuite',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StreamSuite — Real-Time Solana Market Intelligence',
-    description: 'Open-source intelligence platform for Solana memecoin markets.',
+    title: 'StreamSuite — Open-Source Developer Tooling for Solana',
+    description: 'Free APIs and SDKs for Solana trade data, wallet scores, and ML signals.',
   },
 };
 

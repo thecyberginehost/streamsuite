@@ -1,18 +1,48 @@
 # StreamSuite
 
-**Real-time intelligence platform for Solana memecoin markets.**
+**Open-source developer tooling for Solana memecoin markets.**
 
-Wallet reputation scores, influencer accountability, ML-driven market signals — all open-source, all verifiable on-chain.
+APIs, SDKs, and real-time feeds for trade data, wallet reputation, influencer PnL, and ML signals — all free, all open-source.
 
-🌐 [streamsuite.io](https://streamsuite.io)
+[streamsuite.io](https://streamsuite.io)
 
 ---
 
 ## What Is StreamSuite?
 
-StreamSuite is a data intelligence platform that ingests, scores, and serves real-time Solana memecoin market data. It provides developers, researchers, and the community with tools that were previously only available to insiders and whales.
+StreamSuite is a data infrastructure and API layer that gives Solana developers free access to real-time memecoin market intelligence. Build trading bots, analytics dashboards, research tools, or community apps — without maintaining your own data pipeline.
 
-### Core Engines
+### What You Can Build
+
+- **Trading bots** that check wallet reputation before copying a trade
+- **Analytics dashboards** with real-time trade feeds and wallet scores
+- **Influencer accountability tools** that verify caller PnL on-chain
+- **Research platforms** for backtesting strategies against 10M+ historical trades
+- **Community tools** that surface which wallets are consistently profitable
+
+---
+
+## API
+
+```
+GET /api/trades           → Historical trade queries (filter by wallet, token, time range)
+GET /api/wallets/:addr    → Wallet reputation score + history
+GET /api/callers          → Caller leaderboard with verified PnL
+GET /api/tokens/:mint     → Token trade history + metrics
+GET /api/stats            → Live platform statistics
+
+WSS /stream/trades        → Real-time trade events
+WSS /stream/wallets       → Smart wallet activity alerts
+WSS /stream/scores        → Wallet score update events
+```
+
+Free tier for public good. TypeScript and Python SDKs included.
+
+---
+
+## Core Engines
+
+The API is powered by four production systems running 24/7:
 
 **Trade Archive**
 Real-time archiver capturing every pump.fun trade. 10M+ records and growing. Ingests via PumpPortal WebSocket at zero cost, buffers in memory, and flushes to SQLite every 5 seconds.
@@ -21,32 +51,27 @@ Real-time archiver capturing every pump.fun trade. 10M+ records and growing. Ing
 Dynamic wallet reputation engine scoring 4,200+ wallets based on hit rate, moonshot rate, and trading diversity across 30-day rolling windows. Updated every 30 minutes from live on-chain data.
 
 **Caller PnL Tracker**
-Cross-references Twitter influencer calls against actual on-chain outcomes. Computes PnL at 30s, 60s, 90s, and 120s intervals by matching mints to the trade archive. Proves who's profitable vs who's dumping on followers.
+Cross-references Twitter influencer calls against actual on-chain outcomes. Computes PnL at 30s, 60s, 90s, and 120s intervals by matching mints to the trade archive.
 
-**ML Price Classifier**
-XGBoost models trained on 60,000+ pump.fun price action samples. Exit classifier (300 trees, 27 features) and entry classifier (155 trees, 31 features). Open model weights and training pipeline.
+**ML Classifiers**
+XGBoost models trained on 60,000+ pump.fun price action samples. Exit classifier (300 trees, 27 features) and entry classifier (155 trees, 31 features). Open model weights and pure TypeScript inference — no Python runtime needed.
 
 ---
 
 ## Architecture
 
 ```
-PumpPortal WebSocket (every pump.fun trade)
-    │
-    ├── Trade Archiver → SQLite (pumpfun_trades.db)
-    │       10M+ trades │ 333K+ wallets │ 202K+ tokens
-    │
-    ├── Smart Wallet Scorer (every 30 min)
-    │       30-day rolling window │ hit rate, moonshot rate, diversity
-    │       → smart_wallets.json (4,200+ scored wallets)
-    │
-    ├── Caller PnL Tracker
-    │       17 Twitter callers │ PnL at 30s/60s/90s/120s
-    │       Cross-referenced against trade archive
-    │
-    └── ML Classifiers
-            Exit: 300 trees, 27 features, 60K samples
-            Entry: 155 trees, 31 features
+INGESTION (production)
+    PumpPortal WebSocket → Trade Archiver → SQLite
+    10M+ trades | 333K+ wallets | 202K+ tokens
+
+INTELLIGENCE (production)
+    Smart Wallet Scorer → 4,200+ scored wallets (every 30 min)
+    Caller PnL Tracker  → 17 callers, PnL at 30s/60s/90s/120s
+    ML Classifiers      → Entry + exit models, 60K training samples
+
+DISTRIBUTION (building)
+    REST API + WebSocket Feeds + TypeScript SDK + Python SDK
 ```
 
 ---
@@ -71,25 +96,11 @@ All data collected from PumpPortal's free WebSocket feed. No paid APIs required 
 
 - **Runtime:** Node.js + TypeScript
 - **Database:** SQLite (WAL mode) via better-sqlite3
-- **ML:** XGBoost models with pure TypeScript tree walker (no Python runtime needed)
+- **ML:** XGBoost models with pure TypeScript tree walker
 - **Data Source:** PumpPortal WebSocket (real-time pump.fun trades)
 - **Wallet Scoring:** Custom statistical engine with configurable thresholds
-- **Landing Page:** Next.js + Tailwind CSS
-
----
-
-## API (Coming Soon)
-
-Public API for accessing trade data, wallet scores, and caller PnL.
-
-```
-GET /api/stats          → Live platform statistics
-GET /api/wallets/:addr  → Wallet reputation score
-GET /api/callers        → Caller leaderboard with PnL
-GET /api/trades         → Historical trade queries
-```
-
-Free tier for public good. Paid tiers for high-volume access and real-time websocket streams.
+- **SDKs:** TypeScript (npm), Python (PyPI)
+- **Website:** Next.js + Tailwind CSS
 
 ---
 
@@ -102,16 +113,17 @@ Free tier for public good. Paid tiers for high-volume access and real-time webso
 - [ ] Public REST API
 - [ ] Real-time WebSocket feeds
 - [ ] Public dashboard with caller leaderboard
-- [ ] SDK / client libraries
-- [ ] API documentation
+- [ ] TypeScript + Python SDKs
+- [ ] API documentation + integration guides
+- [ ] Multi-pool expansion (Raydium, Orca, Jupiter via Geyser gRPC)
 
 ---
 
 ## Public Good
 
-StreamSuite is built as a public good for the Solana ecosystem. All core engines, models, and data will be open-source under the MIT license.
+StreamSuite is built as a public good for the Solana developer ecosystem. All core engines, models, data, and client libraries are open-source under the MIT license.
 
-The goal is to democratize market intelligence that was previously only accessible to insiders — giving every developer, researcher, and community member the same data and tools.
+The goal is to give every developer, researcher, and community builder the same market intelligence that was previously only accessible to insiders.
 
 ---
 
