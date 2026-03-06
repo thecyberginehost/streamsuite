@@ -17,26 +17,33 @@ StreamSuite is a data infrastructure and API layer that gives Solana developers 
 - **Trading bots** that check wallet reputation before copying a trade
 - **Analytics dashboards** with real-time trade feeds and wallet scores
 - **Influencer accountability tools** that verify caller PnL on-chain
-- **Research platforms** for backtesting strategies against 10M+ historical trades
+- **Research platforms** for backtesting strategies against 14M+ historical trades
 - **Community tools** that surface which wallets are consistently profitable
 
 ---
 
 ## API
 
+**Live now:**
+```
+GET /api/archiver/stats          → Live platform statistics (tokens, trades, wallets)
+GET /api/archiver/volume?hours=N → Hourly trade volume aggregation
+GET /api/archiver/recent-tokens  → Latest token launches with metadata
+```
+
+**Planned:**
 ```
 GET /api/trades           → Historical trade queries (filter by wallet, token, time range)
 GET /api/wallets/:addr    → Wallet reputation score + history
 GET /api/callers          → Caller leaderboard with verified PnL
 GET /api/tokens/:mint     → Token trade history + metrics
-GET /api/stats            → Live platform statistics
 
 WSS /stream/trades        → Real-time trade events
 WSS /stream/wallets       → Smart wallet activity alerts
 WSS /stream/scores        → Wallet score update events
 ```
 
-Free tier for public good. TypeScript and Python SDKs included.
+Free tier for public good. TypeScript and Python SDKs are on the roadmap.
 
 ---
 
@@ -99,18 +106,20 @@ All data collected from PumpPortal's free WebSocket feed. No paid APIs required 
 - **ML:** XGBoost models with pure TypeScript tree walker
 - **Data Source:** PumpPortal WebSocket (real-time pump.fun trades)
 - **Wallet Scoring:** Custom statistical engine with configurable thresholds
-- **SDKs:** TypeScript (npm), Python (PyPI)
+- **SDKs:** TypeScript (npm) and Python (PyPI) — planned
 - **Website:** Next.js + Tailwind CSS
 
 ---
 
 ## Roadmap
 
-- [x] Trade archive engine (production since Feb 2026)
-- [x] Smart wallet scoring engine (production since Feb 2026)
-- [x] ML exit/entry classifiers (trained and deployed)
-- [x] Caller PnL tracker (built, 17 callers configured)
-- [ ] Public REST API
+- [x] Trade archive engine (14M+ trades, production since Feb 2026)
+- [x] DuckDB columnar storage (60% compression, migrated Mar 2026)
+- [x] Smart wallet scoring engine (4,200+ wallets, production since Feb 2026)
+- [x] ML exit/entry classifiers (60K+ training samples, deployed)
+- [x] Caller PnL tracker (17 influencers, computing PnL at 30s/60s/90s/120s)
+- [x] Live archiver API (stats, volume, recent tokens)
+- [ ] Public REST API (trades, wallets, callers)
 - [ ] Real-time WebSocket feeds
 - [ ] Public dashboard with caller leaderboard
 - [ ] TypeScript + Python SDKs

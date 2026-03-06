@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 // ── Stats ──
 
 const FALLBACK_STATS = {
-  trades: 10363405,
-  wallets: 333427,
-  tokens: 202337,
+  trades: 14500000,
+  wallets: 428000,
+  tokens: 270000,
   smartWallets: 4230,
 };
 
@@ -69,8 +69,8 @@ export default function Home() {
             <span className="text-accent">Suite</span>
           </h1>
           <p className="text-slate-400 max-w-xl mx-auto text-base sm:text-lg leading-relaxed mb-8 sm:mb-10">
-            Open-source developer tooling for Solana markets.
-            APIs and SDKs for trade data, wallet reputation, influencer PnL, and ML signals.
+            Open-source data infrastructure for Solana markets.
+            Real-time trade archival, wallet scoring, and ML signals — powering the next generation of developer tools.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <a
@@ -123,15 +123,15 @@ export default function Home() {
 
       {/* ── For Developers ── */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">Build on StreamSuite</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">What Powers StreamSuite</h2>
         <p className="text-slate-500 text-center mb-8 sm:mb-12 max-w-lg mx-auto text-sm">
-          Free APIs, SDKs, and real-time feeds powered by four production engines running 24/7.
+          Four production engines running 24/7. Public APIs coming soon.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
           {[
             {
-              title: 'Trade Archive API',
-              desc: 'Query 10M+ pump.fun trades via REST API. Filter by wallet, token, time range. Backtest strategies without building your own pipeline.',
+              title: 'Trade Archive',
+              desc: 'Real-time archiver capturing every pump.fun trade into DuckDB. 14M+ records and growing, with 60% columnar compression. Public query API coming soon.',
               icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
@@ -139,8 +139,8 @@ export default function Home() {
               ),
             },
             {
-              title: 'Wallet Scoring API',
-              desc: 'Look up any wallet\'s reputation score — hit rate, moonshot rate, diversity. 4,200+ wallets scored, refreshed every 30 minutes.',
+              title: 'Smart Wallet Scoring',
+              desc: 'Dynamic reputation engine scoring wallets on hit rate, moonshot rate, and diversity. 4,200+ wallets scored, refreshed every 30 minutes from live data.',
               icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -148,8 +148,8 @@ export default function Home() {
               ),
             },
             {
-              title: 'Caller PnL API',
-              desc: 'Verified influencer performance data. Build accountability tools that show who actually profits vs who dumps on followers.',
+              title: 'Caller PnL Tracker',
+              desc: 'Cross-references influencer calls against on-chain outcomes. Computes verified PnL at 30s, 60s, 90s, and 120s intervals. Public leaderboard coming soon.',
               icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -157,8 +157,8 @@ export default function Home() {
               ),
             },
             {
-              title: 'ML Models + WebSocket Feeds',
-              desc: 'Open XGBoost model weights plus real-time WebSocket streams for trades, wallet activity, and scoring updates.',
+              title: 'ML Classifiers',
+              desc: 'XGBoost entry and exit models trained on 60,000+ price action samples. Pure TypeScript inference, no Python runtime. Open model weights planned.',
               icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z" />
@@ -181,18 +181,21 @@ export default function Home() {
 
       {/* ── API Preview ── */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">Simple API</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">API</h2>
         <p className="text-slate-500 text-center mb-8 sm:mb-10 max-w-lg mx-auto text-sm">
-          Free tier for public good. TypeScript and Python SDKs included.
+          Live endpoints available now. Full public API coming soon.
         </p>
         <div className="glass-card rounded-xl p-4 sm:p-5 font-mono text-xs sm:text-sm overflow-x-auto">
           <div className="space-y-2.5 sm:space-y-2 text-slate-400">
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/trades</span> <span className="hidden sm:inline text-slate-600">— Historical trade queries with filtering</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/wallets/:addr</span> <span className="hidden sm:inline text-slate-600">— Wallet reputation score + history</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/callers</span> <span className="hidden sm:inline text-slate-600">— Caller leaderboard with verified PnL</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/tokens/:mint</span> <span className="hidden sm:inline text-slate-600">— Token trade history + metrics</span></div>
-            <div><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/trades</span> <span className="hidden sm:inline text-slate-600">— Real-time trade events</span></div>
-            <div><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/wallets</span> <span className="hidden sm:inline text-slate-600">— Smart wallet activity alerts</span></div>
+            <div className="text-slate-600 text-xs mb-2 font-sans">LIVE</div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/stats</span> <span className="hidden sm:inline text-slate-600">— Live platform statistics</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/volume</span> <span className="hidden sm:inline text-slate-600">— Hourly trade volume aggregation</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/recent-tokens</span> <span className="hidden sm:inline text-slate-600">— Latest token launches</span></div>
+            <div className="text-slate-600 text-xs mt-4 mb-2 font-sans">COMING SOON</div>
+            <div className="opacity-50"><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/trades</span> <span className="hidden sm:inline text-slate-600">— Historical trade queries with filtering</span></div>
+            <div className="opacity-50"><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/wallets/:addr</span> <span className="hidden sm:inline text-slate-600">— Wallet reputation score + history</span></div>
+            <div className="opacity-50"><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/callers</span> <span className="hidden sm:inline text-slate-600">— Caller leaderboard with verified PnL</span></div>
+            <div className="opacity-50"><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/trades</span> <span className="hidden sm:inline text-slate-600">— Real-time trade events</span></div>
           </div>
         </div>
       </section>
@@ -207,16 +210,18 @@ export default function Home() {
         </p>
         <div className="max-w-md mx-auto space-y-3">
           {[
-            { done: true, text: 'Trade archive engine' },
-            { done: true, text: 'Smart wallet scoring engine' },
-            { done: true, text: 'ML exit/entry classifiers' },
-            { done: true, text: 'Caller PnL tracker' },
-            { done: false, text: 'Public REST API' },
+            { done: true, text: 'Trade archive engine (14M+ trades)' },
+            { done: true, text: 'DuckDB columnar storage (60% compression)' },
+            { done: true, text: 'Smart wallet scoring engine (4,200+ wallets)' },
+            { done: true, text: 'ML exit/entry classifiers (60K+ training samples)' },
+            { done: true, text: 'Caller PnL tracker (17 influencers)' },
+            { done: true, text: 'Live archiver API (stats, volume, tokens)' },
+            { done: false, text: 'Public REST API (trades, wallets, callers)' },
             { done: false, text: 'Real-time WebSocket feeds' },
             { done: false, text: 'Public dashboard & caller leaderboard' },
-            { done: false, text: 'Multi-pool expansion (Raydium, Orca, Jupiter)' },
             { done: false, text: 'TypeScript + Python SDKs' },
             { done: false, text: 'API documentation + integration guides' },
+            { done: false, text: 'Multi-pool expansion (Raydium, Orca, Jupiter)' },
           ].map((item) => (
             <div key={item.text} className="flex items-center gap-3">
               {item.done ? (
