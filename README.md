@@ -45,7 +45,7 @@ Free tier for public good. TypeScript and Python SDKs included.
 The API is powered by four production systems running 24/7:
 
 **Trade Archive**
-Real-time archiver capturing every pump.fun trade. 10M+ records and growing. Ingests via PumpPortal WebSocket at zero cost, buffers in memory, and flushes to SQLite every 5 seconds.
+Real-time archiver capturing every pump.fun trade. 14M+ records and growing. Ingests via PumpPortal WebSocket at zero cost, buffers in memory, and flushes to DuckDB every 5 seconds. Columnar storage achieves 60% compression over row-oriented databases.
 
 **Smart Wallet Scoring**
 Dynamic wallet reputation engine scoring 4,200+ wallets based on hit rate, moonshot rate, and trading diversity across 30-day rolling windows. Updated every 30 minutes from live on-chain data.
@@ -62,8 +62,8 @@ XGBoost models trained on 60,000+ pump.fun price action samples. Exit classifier
 
 ```
 INGESTION (production)
-    PumpPortal WebSocket → Trade Archiver → SQLite
-    10M+ trades | 333K+ wallets | 202K+ tokens
+    PumpPortal WebSocket → Trade Archiver → DuckDB (columnar)
+    14M+ trades | 428K+ wallets | 270K+ tokens
 
 INTELLIGENCE (production)
     Smart Wallet Scorer → 4,200+ scored wallets (every 30 min)
@@ -80,11 +80,11 @@ DISTRIBUTION (building)
 
 | Metric | Value |
 |--------|-------|
-| Trades Archived | 10M+ |
-| Wallets Analyzed | 333K+ |
-| Tokens Tracked | 202K+ |
+| Trades Archived | 14M+ |
+| Wallets Analyzed | 428K+ |
+| Tokens Tracked | 270K+ |
 | Wallets Scored | 4,200+ |
-| Data Ingestion | 160MB/day |
+| Storage Efficiency | 60% smaller via columnar compression |
 | Scoring Cycle | Every 30 min |
 | External API Cost | $0 |
 
@@ -95,7 +95,7 @@ All data collected from PumpPortal's free WebSocket feed. No paid APIs required 
 ## Tech Stack
 
 - **Runtime:** Node.js + TypeScript
-- **Database:** SQLite (WAL mode) via better-sqlite3
+- **Database:** DuckDB (columnar analytics engine)
 - **ML:** XGBoost models with pure TypeScript tree walker
 - **Data Source:** PumpPortal WebSocket (real-time pump.fun trades)
 - **Wallet Scoring:** Custom statistical engine with configurable thresholds

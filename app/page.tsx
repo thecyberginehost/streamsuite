@@ -11,27 +11,29 @@ const FALLBACK_STATS = {
   smartWallets: 4230,
 };
 
-const STATS_API = process.env.NEXT_PUBLIC_STATS_API || '';
+const API_BASE = process.env.NEXT_PUBLIC_ARCHIVER_API || '';
 
 function useStats() {
   const [stats, setStats] = useState(FALLBACK_STATS);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
-    if (!STATS_API) return;
+    if (!API_BASE) return;
     let active = true;
     const fetchStats = async () => {
       try {
-        const res = await fetch(STATS_API);
+        const res = await fetch(`${API_BASE}/archiver/stats`);
         if (res.ok && active) {
           const data = await res.json();
-          setStats({
-            trades: data.trades ?? FALLBACK_STATS.trades,
-            wallets: data.wallets ?? FALLBACK_STATS.wallets,
-            tokens: data.tokens ?? FALLBACK_STATS.tokens,
-            smartWallets: data.smartWallets ?? FALLBACK_STATS.smartWallets,
-          });
-          setIsLive(true);
+          if (data) {
+            setStats({
+              trades: data.trades ?? FALLBACK_STATS.trades,
+              wallets: data.wallets ?? FALLBACK_STATS.wallets,
+              tokens: data.tokens ?? FALLBACK_STATS.tokens,
+              smartWallets: data.smartWallets ?? FALLBACK_STATS.smartWallets,
+            });
+            setIsLive(true);
+          }
         }
       } catch {
         if (active) setIsLive(false);
@@ -61,12 +63,12 @@ export default function Home() {
       {/* ── Hero ── */}
       <section className="dot-grid relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#060c1f]" />
-        <div className="relative max-w-4xl mx-auto px-6 pt-28 pb-20 text-center">
-          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight mb-4">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-16 sm:pb-20 text-center">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
             <span className="text-white">Stream</span>
             <span className="text-accent">Suite</span>
           </h1>
-          <p className="text-slate-400 max-w-xl mx-auto text-lg leading-relaxed mb-10">
+          <p className="text-slate-400 max-w-xl mx-auto text-base sm:text-lg leading-relaxed mb-8 sm:mb-10">
             Open-source developer tooling for Solana markets.
             APIs and SDKs for trade data, wallet reputation, influencer PnL, and ML signals.
           </p>
@@ -93,8 +95,8 @@ export default function Home() {
       </section>
 
       {/* ── Stats Strip ── */}
-      <section className="max-w-4xl mx-auto px-6 pb-16">
-        <div className="glass-card rounded-xl p-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
+        <div className="glass-card rounded-xl p-4 sm:p-6 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[
             { value: fmt(stats.trades), label: 'Trades Archived' },
             { value: fmt(stats.wallets), label: 'Wallets Analyzed' },
@@ -102,7 +104,7 @@ export default function Home() {
             { value: fmt(stats.smartWallets), label: 'Wallets Scored' },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <div className="stat-number font-mono text-3xl sm:text-4xl font-bold">{s.value}</div>
+              <div className="stat-number font-mono text-2xl sm:text-3xl md:text-4xl font-bold">{s.value}</div>
               <div className="text-slate-500 text-xs mt-1">{s.label}</div>
             </div>
           ))}
@@ -120,12 +122,12 @@ export default function Home() {
       <div className="divider max-w-2xl mx-auto" />
 
       {/* ── For Developers ── */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-bold text-white text-center mb-3">Build on StreamSuite</h2>
-        <p className="text-slate-500 text-center mb-12 max-w-lg mx-auto text-sm">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">Build on StreamSuite</h2>
+        <p className="text-slate-500 text-center mb-8 sm:mb-12 max-w-lg mx-auto text-sm">
           Free APIs, SDKs, and real-time feeds powered by four production engines running 24/7.
         </p>
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
           {[
             {
               title: 'Trade Archive API',
@@ -178,19 +180,19 @@ export default function Home() {
       <div className="divider max-w-2xl mx-auto" />
 
       {/* ── API Preview ── */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-bold text-white text-center mb-3">Simple API</h2>
-        <p className="text-slate-500 text-center mb-10 max-w-lg mx-auto text-sm">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">Simple API</h2>
+        <p className="text-slate-500 text-center mb-8 sm:mb-10 max-w-lg mx-auto text-sm">
           Free tier for public good. TypeScript and Python SDKs included.
         </p>
-        <div className="glass-card rounded-xl p-5 font-mono text-sm overflow-x-auto">
-          <div className="space-y-2 text-slate-400">
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/trades</span> <span className="text-slate-600">— Historical trade queries with filtering</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/wallets/:addr</span> <span className="text-slate-600">— Wallet reputation score + history</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/callers</span> <span className="text-slate-600">— Caller leaderboard with verified PnL</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/tokens/:mint</span> <span className="text-slate-600">— Token trade history + metrics</span></div>
-            <div><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/trades</span> <span className="text-slate-600">— Real-time trade events</span></div>
-            <div><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/wallets</span> <span className="text-slate-600">— Smart wallet activity alerts</span></div>
+        <div className="glass-card rounded-xl p-4 sm:p-5 font-mono text-xs sm:text-sm overflow-x-auto">
+          <div className="space-y-2.5 sm:space-y-2 text-slate-400">
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/trades</span> <span className="hidden sm:inline text-slate-600">— Historical trade queries with filtering</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/wallets/:addr</span> <span className="hidden sm:inline text-slate-600">— Wallet reputation score + history</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/callers</span> <span className="hidden sm:inline text-slate-600">— Caller leaderboard with verified PnL</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/tokens/:mint</span> <span className="hidden sm:inline text-slate-600">— Token trade history + metrics</span></div>
+            <div><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/trades</span> <span className="hidden sm:inline text-slate-600">— Real-time trade events</span></div>
+            <div><span className="text-cyan-400">WSS</span> <span className="text-slate-300">/stream/wallets</span> <span className="hidden sm:inline text-slate-600">— Smart wallet activity alerts</span></div>
           </div>
         </div>
       </section>
@@ -198,9 +200,9 @@ export default function Home() {
       <div className="divider max-w-2xl mx-auto" />
 
       {/* ── Roadmap ── */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-bold text-white text-center mb-3">Roadmap</h2>
-        <p className="text-slate-500 text-center mb-10 max-w-lg mx-auto text-sm">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">Roadmap</h2>
+        <p className="text-slate-500 text-center mb-8 sm:mb-10 max-w-lg mx-auto text-sm">
           What&apos;s shipped and what&apos;s next.
         </p>
         <div className="max-w-md mx-auto space-y-3">
@@ -235,8 +237,8 @@ export default function Home() {
       <div className="divider max-w-2xl mx-auto" />
 
       {/* ── Open Source CTA ── */}
-      <section className="max-w-4xl mx-auto px-6 py-20 text-center">
-        <h2 className="text-2xl font-bold text-white mb-3">Open source, free tier, MIT license</h2>
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20 text-center">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Open source, free tier, MIT license</h2>
         <p className="text-slate-500 max-w-md mx-auto text-sm mb-8 leading-relaxed">
           Developer tooling that gives every builder in the Solana ecosystem
           the same data and signals that were previously only accessible to insiders.
@@ -254,7 +256,7 @@ export default function Home() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-white/5 py-8">
-        <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-slate-600 text-xs">StreamSuite &copy; 2026</span>
           <div className="flex items-center gap-5">
             <a href="https://github.com/thecyberginehost/streamsuite" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-400 transition-colors text-xs">GitHub</a>

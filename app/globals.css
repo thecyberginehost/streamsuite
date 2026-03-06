@@ -53,3 +53,15 @@ body {
 .roadmap-pending {
   color: #475569;
 }
+
+/* Mobile touch improvements */
+@media (max-width: 640px) {
+  .glass-card {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent horizontal overflow on mobile */
+  body {
+    overflow-x: hidden;
+  }
+}
