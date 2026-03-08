@@ -9,19 +9,19 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'StreamSuite — Open-Source Developer Tooling for Solana',
-  description: 'Free APIs and SDKs for Solana trade data, wallet reputation scores, influencer PnL, and ML signals. Open-source developer tooling for the Solana ecosystem.',
+  title: 'StreamSuite — Open-Source Data Infrastructure for Solana',
+  description: 'Real-time trade archival, wallet intelligence, and ML signals for Solana memecoin markets. Free API access and Parquet data exports.',
   openGraph: {
-    title: 'StreamSuite — Open-Source Developer Tooling for Solana',
-    description: 'Free APIs and SDKs for Solana trade data, wallet reputation scores, influencer PnL, and ML signals. Open-source developer tooling for the Solana ecosystem.',
+    title: 'StreamSuite — Open-Source Data Infrastructure for Solana',
+    description: 'Real-time trade archival, wallet intelligence, and ML signals for Solana memecoin markets. Free API access and Parquet data exports.',
     url: 'https://streamsuite.io',
     siteName: 'StreamSuite',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StreamSuite — Open-Source Developer Tooling for Solana',
-    description: 'Free APIs and SDKs for Solana trade data, wallet scores, and ML signals.',
+    title: 'StreamSuite — Open-Source Data Infrastructure for Solana',
+    description: 'Real-time trade archival, wallet intelligence, and ML signals for Solana markets.',
   },
 };
 

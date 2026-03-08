@@ -1,8 +1,8 @@
 # StreamSuite
 
-**Open-source developer tooling for Solana memecoin markets.**
+**Open-source data infrastructure for Solana memecoin markets.**
 
-APIs, SDKs, and real-time feeds for trade data, wallet reputation, influencer PnL, and ML signals — all free, all open-source.
+Real-time trade archival, wallet intelligence, and ML signals — powering the next generation of developer tools.
 
 [streamsuite.io](https://streamsuite.io)
 
@@ -10,15 +10,15 @@ APIs, SDKs, and real-time feeds for trade data, wallet reputation, influencer Pn
 
 ## What Is StreamSuite?
 
-StreamSuite is a data infrastructure and API layer that gives Solana developers free access to real-time memecoin market intelligence. Build trading bots, analytics dashboards, research tools, or community apps — without maintaining your own data pipeline.
+StreamSuite is a data infrastructure and API layer that gives Solana developers access to real-time memecoin market intelligence. Build trading bots, analytics dashboards, research tools, or portfolio trackers — without maintaining your own data pipeline.
 
 ### What You Can Build
 
 - **Trading bots** that check wallet reputation before copying a trade
 - **Analytics dashboards** with real-time trade feeds and wallet scores
-- **Influencer accountability tools** that verify caller PnL on-chain
 - **Research platforms** for backtesting strategies against 14M+ historical trades
 - **Community tools** that surface which wallets are consistently profitable
+- **Trending token feeds** showing what's pumping right now with momentum scoring
 
 ---
 
@@ -26,39 +26,34 @@ StreamSuite is a data infrastructure and API layer that gives Solana developers 
 
 **Live now:**
 ```
-GET /api/archiver/stats          → Live platform statistics (tokens, trades, wallets)
-GET /api/archiver/volume?hours=N → Hourly trade volume aggregation
-GET /api/archiver/recent-tokens  → Latest token launches with metadata
+GET /api/archiver/stats              → Live platform statistics (tokens, trades, wallets)
+GET /api/archiver/volume?hours=N     → Hourly trade volume aggregation
+GET /api/archiver/recent-tokens      → Latest token launches with metadata
+GET /api/archiver/smart-wallets      → Qualified smart wallet list
+GET /api/archiver/wallet/:addr       → Wallet reputation lookup + trade stats
 ```
 
 **Planned:**
 ```
 GET /api/trades           → Historical trade queries (filter by wallet, token, time range)
-GET /api/wallets/:addr    → Wallet reputation score + history
-GET /api/callers          → Caller leaderboard with verified PnL
 GET /api/tokens/:mint     → Token trade history + metrics
-
-WSS /stream/trades        → Real-time trade events
-WSS /stream/wallets       → Smart wallet activity alerts
-WSS /stream/scores        → Wallet score update events
+GET /api/trending         → Real-time trending tokens with momentum scores
+GET /api/export           → Parquet data export (self-serve historical data)
 ```
 
-Free tier for public good. TypeScript and Python SDKs are on the roadmap.
+Free tier with weekly data exports. Paid tiers for full dashboard access and unlimited exports.
 
 ---
 
 ## Core Engines
 
-The API is powered by four production systems running 24/7:
+The API is powered by three production systems running 24/7:
 
 **Trade Archive**
 Real-time archiver capturing every pump.fun trade. 14M+ records and growing. Ingests via PumpPortal WebSocket at zero cost, buffers in memory, and flushes to DuckDB every 5 seconds. Columnar storage achieves 60% compression over row-oriented databases.
 
-**Smart Wallet Scoring**
-Dynamic wallet reputation engine scoring 4,200+ wallets based on hit rate, moonshot rate, and trading diversity across 30-day rolling windows. Updated every 30 minutes from live on-chain data.
-
-**Caller PnL Tracker**
-Cross-references Twitter influencer calls against actual on-chain outcomes. Computes PnL at 30s, 60s, 90s, and 120s intervals by matching mints to the trade archive.
+**Wallet Intelligence**
+Dynamic wallet reputation engine scoring 66K+ wallets on hit rate, moonshot rate, and trading diversity across 30-day rolling windows. 2,200+ qualified wallets. Updated every 30 minutes from live DuckDB data using analytical SQL with time-chunked processing.
 
 **ML Classifiers**
 XGBoost models trained on 60,000+ pump.fun price action samples. Exit classifier (300 trees, 27 features) and entry classifier (155 trees, 31 features). Open model weights and pure TypeScript inference — no Python runtime needed.
@@ -73,12 +68,13 @@ INGESTION (production)
     14M+ trades | 428K+ wallets | 270K+ tokens
 
 INTELLIGENCE (production)
-    Smart Wallet Scorer → 4,200+ scored wallets (every 30 min)
-    Caller PnL Tracker  → 17 callers, PnL at 30s/60s/90s/120s
+    Wallet Intelligence → 66K+ scored, 2,200+ qualified (every 30 min)
     ML Classifiers      → Entry + exit models, 60K training samples
 
-DISTRIBUTION (building)
-    REST API + WebSocket Feeds + TypeScript SDK + Python SDK
+DISTRIBUTION (live + building)
+    REST API: stats, volume, tokens, wallets (live)
+    Trending dashboard + token explorer (building)
+    Parquet data exports (planned)
 ```
 
 ---
@@ -90,7 +86,7 @@ DISTRIBUTION (building)
 | Trades Archived | 14M+ |
 | Wallets Analyzed | 428K+ |
 | Tokens Tracked | 270K+ |
-| Wallets Scored | 4,200+ |
+| Wallets Scored | 66K+ (2,200+ qualified) |
 | Storage Efficiency | 60% smaller via columnar compression |
 | Scoring Cycle | Every 30 min |
 | External API Cost | $0 |
@@ -106,7 +102,6 @@ All data collected from PumpPortal's free WebSocket feed. No paid APIs required 
 - **ML:** XGBoost models with pure TypeScript tree walker
 - **Data Source:** PumpPortal WebSocket (real-time pump.fun trades)
 - **Wallet Scoring:** Custom statistical engine with configurable thresholds
-- **SDKs:** TypeScript (npm) and Python (PyPI) — planned
 - **Website:** Next.js + Tailwind CSS
 
 ---
@@ -115,24 +110,28 @@ All data collected from PumpPortal's free WebSocket feed. No paid APIs required 
 
 - [x] Trade archive engine (14M+ trades, production since Feb 2026)
 - [x] DuckDB columnar storage (60% compression, migrated Mar 2026)
-- [x] Smart wallet scoring engine (4,200+ wallets, production since Feb 2026)
+- [x] Smart wallet scoring engine (66K+ scored, 2,200+ qualified, production since Mar 2026)
 - [x] ML exit/entry classifiers (60K+ training samples, deployed)
-- [x] Caller PnL tracker (17 influencers, computing PnL at 30s/60s/90s/120s)
-- [x] Live archiver API (stats, volume, recent tokens)
-- [ ] Public REST API (trades, wallets, callers)
-- [ ] Real-time WebSocket feeds
-- [ ] Public dashboard with caller leaderboard
-- [ ] TypeScript + Python SDKs
-- [ ] API documentation + integration guides
-- [ ] Multi-pool expansion (Raydium, Orca, Jupiter via Geyser gRPC)
+- [x] Live archiver API (stats, volume, tokens, wallets)
+- [x] API documentation with multi-language examples
+- [ ] Trending tokens dashboard (real-time momentum scoring)
+- [ ] Token explorer (search any mint, full trade history)
+- [ ] Wallet connect authentication + API keys
+- [ ] Parquet data exports (self-serve historical data)
+- [ ] Tiered access (free weekly export / paid dashboard + unlimited exports)
 
 ---
 
-## Public Good
+## Access Tiers
 
-StreamSuite is built as a public good for the Solana developer ecosystem. All core engines, models, data, and client libraries are open-source under the MIT license.
-
-The goal is to give every developer, researcher, and community builder the same market intelligence that was previously only accessible to insiders.
+| Feature | Free | Pro |
+|---------|------|-----|
+| Trending tokens page | Yes | Yes |
+| API (stats, tokens, wallets) | Yes | Yes |
+| Parquet data export | 1x/week (72hr) | Unlimited (30-day) |
+| Visual dashboard | — | Yes |
+| Token explorer | — | Yes |
+| Historical data access | 72 hours | 30+ days |
 
 ---
 

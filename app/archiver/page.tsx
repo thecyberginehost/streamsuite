@@ -442,7 +442,8 @@ export default function ArchiverPage() {
             <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/stats</span> <span className="hidden sm:inline text-slate-600">— Live counters</span></div>
             <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/volume?hours=24</span> <span className="hidden sm:inline text-slate-600">— Hourly volume</span></div>
             <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/recent-tokens?limit=20</span> <span className="hidden sm:inline text-slate-600">— Latest tokens</span></div>
-            <div><span className="text-cyan-400">SSE</span> <span className="text-slate-300">/api/live</span> <span className="hidden sm:inline text-slate-600">— Real-time updates (5s interval)</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/smart-wallets</span> <span className="hidden sm:inline text-slate-600">— Qualified smart wallets</span></div>
+            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/wallet/:addr</span> <span className="hidden sm:inline text-slate-600">— Wallet reputation lookup</span></div>
           </div>
         </div>
       </section>
