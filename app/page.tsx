@@ -12,7 +12,7 @@ const specs = [
   { k: 'IPC latency', v: '< 1ms median (colocation tier, benchmarked under full load)' },
   { k: 'Rate limits', v: 'None. Unlimited requests, unlimited subscriptions.' },
   { k: 'Location', v: 'Ashburn, VA — Tier-IV datacenter' },
-  { k: 'Operators per group', v: '10 max. We provision new hardware, not new excuses.' },
+  { k: 'Operators per group', v: '10 max.' },
   { k: 'Uptime target', v: '99.9% — bare-metal, not virtualized, not load-balanced' },
 ];
 
@@ -21,7 +21,7 @@ const products = [
     tag: 'Live now',
     tagLive: true,
     title: 'BSC RPC Access',
-    body: 'Dedicated BSC endpoints over HTTP and WebSocket. Three access tiers \u2014 Real-Time, Mempool, and Full Node \u2014 from $399/mo. Zero rate limits.',
+    body: 'BSC endpoints over HTTP and WebSocket. Three access tiers \u2014 Real-Time, Mempool, and Full Node \u2014 from $399/mo.',
     cta: 'See BSC pricing',
     href: '/pricing#bsc',
   },
@@ -58,7 +58,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] max-w-5xl">
-            <span className="text-ink">Dedicated blockchain</span>
+            <span className="text-ink">Bare-metal blockchain</span>
             <br />
             <span className="accent-gradient">infrastructure.</span>
           </h1>
@@ -68,9 +68,9 @@ export default function Home() {
           </p>
 
           <p className="mt-4 text-base text-muted/80 max-w-2xl">
-            StreamSuite runs dedicated bare-metal infrastructure for serious operators — MEV
+            StreamSuite runs bare-metal infrastructure for serious operators — MEV
             searchers, arbitrage desks, market makers, liquidation bots. Not a shared cloud RPC.
-            Not a freemium dashboard. Dedicated hardware, direct endpoints, one team that answers
+            Not a freemium dashboard. Bare-metal hardware, direct endpoints, one team that answers
             on Telegram.
           </p>
 
@@ -106,29 +106,6 @@ export default function Home() {
 
       <div className="divider max-w-5xl mx-auto" />
 
-
-      {/* FLAT RATE */}
-      <section className="max-w-7xl mx-auto px-6 py-20 md:py-24">
-        <div className="max-w-3xl">
-          <div className="text-xs font-mono uppercase tracking-widest text-accent mb-3">
-            Pricing model
-          </div>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink leading-tight">
-            Flat rate. No surprises.
-          </h2>
-          <p className="mt-5 text-lg text-muted leading-relaxed">
-            Flat monthly pricing. No compute units. No rate limits. No overages.
-            When we say $399/mo, your invoice says $399/mo. Every month.
-          </p>
-          <p className="mt-3 text-muted leading-relaxed">
-            We can offer this because we cap operators per colocation group &mdash;
-            when a group fills, we provision new hardware, not more seats.
-          </p>
-        </div>
-      </section>
-
-      <div className="divider max-w-5xl mx-auto" />
-
       {/* HARDWARE SPECS */}
       <section className="max-w-7xl mx-auto px-6 py-20 md:py-24">
         <div className="grid md:grid-cols-5 gap-10 md:gap-16 items-start">
@@ -143,10 +120,6 @@ export default function Home() {
               Every number on this page was measured under full load with all operator
               slots active. Not synthetic benchmarks, not &ldquo;up to&rdquo; marketing
               &mdash; real traffic, real contention, real results.
-            </p>
-            <p className="mt-3 text-muted leading-relaxed">
-              We cap at 10 operators. When we&apos;re full, we provision new hardware — we
-              don&apos;t oversubscribe.
             </p>
           </div>
 
@@ -232,8 +205,7 @@ export default function Home() {
               Ten operators per colocation group. When we&apos;re full, we&apos;re full.
             </h2>
             <p className="mt-5 text-muted leading-relaxed text-lg">
-              Ten operators per colocation group. When we&apos;re full, we&apos;re full &mdash;
-              we provision new hardware instead of oversubscribing existing boxes.
+              We provision new hardware instead of oversubscribing existing boxes.
               That physical cap is why we can offer flat-rate pricing with no
               rate limits or overages: the hardware is never shared beyond what
               it can handle cleanly.

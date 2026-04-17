@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Pricing \u2014 StreamSuite',
   description:
-    'Dedicated BSC RPC pricing. Real-Time ($399/mo), Mempool ($999/mo), Full Node ($2,499/mo). Custom chain nodes from $599/mo. Colocated bots from $5,000. Card and crypto accepted.',
+    'Bare-metal BSC RPC pricing. Real-Time ($399/mo), Mempool ($999/mo), Full Node ($2,499/mo). Custom chain nodes from $599/mo. Colocated bots from $5,000. Card and crypto accepted.',
 };
 
 type Tier = {
@@ -30,7 +30,6 @@ const bscTiers: Tier[] = [
     best: 'DApp backends, analytics, research, indexing',
     features: [
       'HTTP + WebSocket endpoints',
-      'No rate limits, no request caps',
       'All standard methods (eth_*, net_*, web3_*)',
       'eth_call, eth_estimateGas, eth_sendRawTransaction',
       'newHeads and logs subscriptions',
@@ -156,7 +155,7 @@ export default function Pricing() {
           <span>Pricing</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-ink max-w-3xl">
-          Dedicated infrastructure.{' '}
+          Bare-metal infrastructure.{' '}
           <span className="accent-gradient">Honest pricing.</span>
         </h1>
         <p className="mt-5 text-lg text-muted max-w-2xl">
@@ -174,7 +173,7 @@ export default function Pricing() {
             <h2 className="text-2xl md:text-3xl font-semibold text-ink">BNB Chain endpoints</h2>
             <p className="text-muted text-sm mt-2 max-w-xl">
               Bare-metal BSC infrastructure. Each tier unlocks additional methods and support
-              levels. Same hardware, same zero rate limits across all tiers. Latency shown is server-side processing time — your total round-trip depends on your network distance to Ashburn, VA. Active colocation group with open slots — typical provisioning in under an hour.
+              levels. Latency shown is server-side processing time — your total round-trip depends on your network distance to Ashburn, VA. Active colocation group with open slots — typical provisioning in under an hour.
             </p>
           </div>
           <div className="text-right text-xs text-muted font-mono">va-bsc-01.streamsuite.io</div>
@@ -231,16 +230,17 @@ export default function Pricing() {
           <p className="text-sm text-muted leading-relaxed mb-4">
             We use the term &ldquo;colocation group&rdquo; deliberately. It means a capped
             cohort of operators physically colocated on the same bare-metal
-            server &mdash; not a shared multi-tenant cloud instance. Each group has
-            its own designated hostname (e.g., va-bsc-01.streamsuite.io), a
-            known capacity ceiling, and measured performance characteristics
-            under full load. Customers know which group they&apos;re on. When a
-            group fills, we bring up a new one rather than squeezing more
-            operators onto existing hardware.
+            server &mdash; not a shared multi-tenant cloud instance.
+          </p>
+          <p className="text-sm text-muted leading-relaxed mb-4">
+            Each group has its own designated hostname (e.g., va-bsc-01.streamsuite.io),
+            a known capacity ceiling, and measured performance characteristics
+            under full load. Customers know which group they&apos;re on.
           </p>
           <p className="text-sm text-muted leading-relaxed">
-            Dedicated (single-tenant) hardware is available separately for
-            Custom Builds and colocated bot hosting.
+            When a group fills, we bring up a new one rather than squeezing more
+            operators onto existing hardware. Dedicated (single-tenant) hardware is
+            available separately for Custom Builds and colocated bot hosting.
           </p>
         </div>
       </section>
@@ -258,7 +258,7 @@ export default function Pricing() {
             <p className="text-muted leading-relaxed mb-5">
               Solana, Ethereum, Base, Arbitrum, Optimism, or any EVM chain. We provision
               dedicated hardware and give you the endpoints. Same iron as BSC — bare-metal,
-              NVMe, Ashburn. No rate limits.
+              NVMe, Ashburn.
             </p>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6 text-sm">
               {['Solana', 'Ethereum', 'Base', 'Arbitrum', 'Optimism', 'Any EVM, ask'].map(
