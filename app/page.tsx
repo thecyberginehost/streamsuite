@@ -1,264 +1,260 @@
-'use client';
+import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+const stats = [
+  { value: '<6ms', label: 'Server-side latency' },
+  { value: '0', label: 'Rate limits' },
+  { value: '10', label: 'Max operators' },
+  { value: '24/7', label: 'Direct operator support' },
+];
 
-// ── Stats ──
+const specs = [
+  { k: 'Server-side latency', v: '< 6ms median (WebSocket, benchmarked under full load)' },
+  { k: 'IPC latency', v: '< 1ms median (colocation tier, benchmarked under full load)' },
+  { k: 'Rate limits', v: 'None. Unlimited requests, unlimited subscriptions.' },
+  { k: 'Location', v: 'Ashburn, VA — Tier-IV datacenter' },
+  { k: 'Operators per group', v: '10 max. We provision new hardware, not new excuses.' },
+  { k: 'Uptime target', v: '99.9% — bare-metal, not virtualized, not load-balanced' },
+];
 
-const FALLBACK_STATS = {
-  trades: 14500000,
-  wallets: 428000,
-  tokens: 270000,
-  smartWallets: 4230,
-};
-
-const API_BASE = process.env.NEXT_PUBLIC_ARCHIVER_API || '';
-
-function useStats() {
-  const [stats, setStats] = useState(FALLBACK_STATS);
-  const [isLive, setIsLive] = useState(false);
-
-  useEffect(() => {
-    if (!API_BASE) return;
-    let active = true;
-    const fetchStats = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/archiver/stats`);
-        if (res.ok && active) {
-          const data = await res.json();
-          if (data) {
-            setStats({
-              trades: data.trades ?? FALLBACK_STATS.trades,
-              wallets: data.wallets ?? FALLBACK_STATS.wallets,
-              tokens: data.tokens ?? FALLBACK_STATS.tokens,
-              smartWallets: data.smartWallets ?? FALLBACK_STATS.smartWallets,
-            });
-            setIsLive(true);
-          }
-        }
-      } catch {
-        if (active) setIsLive(false);
-      }
-    };
-    fetchStats();
-    const interval = setInterval(fetchStats, 10000);
-    return () => { active = false; clearInterval(interval); };
-  }, []);
-
-  return { stats, isLive };
-}
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
-  return n.toLocaleString();
-}
-
-// ── Page ──
+const products = [
+  {
+    tag: 'Live now',
+    tagLive: true,
+    title: 'BSC RPC Access',
+    body: 'Dedicated BSC endpoints over HTTP and WebSocket. Three access tiers \u2014 Real-Time, Mempool, and Full Node \u2014 from $399/mo. Zero rate limits.',
+    cta: 'See BSC pricing',
+    href: '/pricing#bsc',
+  },
+  {
+    tag: '< 14 day delivery',
+    tagLive: false,
+    title: 'Custom Chain Nodes',
+    body: 'Dedicated Solana, Ethereum, Base, Arbitrum, Optimism, or any EVM. Provisioned on our bare-metal hardware. You get the endpoints, we handle the ops.',
+    cta: 'Request a quote',
+    href: '/pricing#custom',
+  },
+  {
+    tag: 'Research \u0026 execution',
+    tagLive: false,
+    title: 'Custom Builds',
+    body: 'MEV research tooling, trading bots, on-chain analytics \u2014 built to your spec in Rust or TypeScript. Optional colocation on our hardware with sub-millisecond IPC to the node.',
+    cta: 'Learn more',
+    href: '/pricing#builds',
+  },
+];
 
 export default function Home() {
-  const { stats, isLive } = useStats();
-
   return (
-    <main className="min-h-screen">
-      {/* ── Hero ── */}
-      <section className="dot-grid relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#060c1f]" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-16 sm:pb-20 text-center">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
-            <span className="text-white">Stream</span>
-            <span className="text-accent">Suite</span>
+    <>
+      {/* HERO */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 dot-grid opacity-60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg pointer-events-none" />
+
+        <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
+          <div className="pill mb-6">
+            <span className="pulse-dot" />
+            <span className="font-mono">ASHBURN / VA &middot; BARE METAL &middot; LIMITED</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] max-w-5xl">
+            <span className="text-ink">Dedicated blockchain</span>
+            <br />
+            <span className="accent-gradient">infrastructure.</span>
           </h1>
-          <p className="text-slate-400 max-w-xl mx-auto text-base sm:text-lg leading-relaxed mb-8 sm:mb-10">
-            Open-source data infrastructure for Solana markets.
-            Real-time trade archival, wallet intelligence, and ML signals — powering the next generation of developer tools.
+
+          <p className="mt-6 text-lg md:text-xl text-muted max-w-2xl leading-relaxed">
+            Single-digit millisecond latency. Zero rate limits. Your edge, our iron.
           </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <a
-              href="https://github.com/thecyberginehost/streamsuite"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 transition-colors text-sm font-medium"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
-              GitHub
-            </a>
-            <a
-              href="/docs"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition-colors text-sm font-medium"
-            >
-              API Docs
-            </a>
+
+          <p className="mt-4 text-base text-muted/80 max-w-2xl">
+            StreamSuite runs dedicated bare-metal infrastructure for serious operators — MEV
+            searchers, arbitrage desks, market makers, liquidation bots. Not a shared cloud RPC.
+            Not a freemium dashboard. Dedicated hardware, direct endpoints, one team that answers
+            on Telegram.
+          </p>
+
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Link href="/request-access" className="btn-primary">
+              Request Access
+              <span className="ml-2">&rarr;</span>
+            </Link>
+            <Link href="/pricing" className="btn-ghost">
+              View Pricing
+            </Link>
           </div>
-        </div>
-      </section>
 
-      {/* ── Stats Strip ── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
-        <div className="glass-card rounded-xl p-4 sm:p-6 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {[
-            { value: fmt(stats.trades), label: 'Trades Archived' },
-            { value: fmt(stats.wallets), label: 'Wallets Analyzed' },
-            { value: fmt(stats.tokens), label: 'Tokens Tracked' },
-            { value: fmt(stats.smartWallets), label: 'Wallets Scored' },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="stat-number font-mono text-2xl sm:text-3xl md:text-4xl font-bold">{s.value}</div>
-              <div className="text-slate-500 text-xs mt-1">{s.label}</div>
-            </div>
-          ))}
-        </div>
-        {isLive && (
-          <div className="flex justify-center mt-3">
-            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400/70">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live
-            </span>
-          </div>
-        )}
-      </section>
-
-      <div className="divider max-w-2xl mx-auto" />
-
-      {/* ── For Developers ── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">What Powers StreamSuite</h2>
-        <p className="text-slate-500 text-center mb-8 sm:mb-12 max-w-lg mx-auto text-sm">
-          Three production engines running 24/7.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-          {[
-            {
-              title: 'Trade Archive',
-              desc: 'Real-time archiver capturing every pump.fun trade into DuckDB. 14M+ records and growing, with 60% columnar compression. Export as Parquet for your own analysis.',
-              icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
-                </svg>
-              ),
-            },
-            {
-              title: 'Wallet Intelligence',
-              desc: 'Dynamic reputation engine scoring 66K+ wallets on hit rate, moonshot rate, and diversity. 2,200+ qualified smart wallets, refreshed every 30 minutes from live data.',
-              icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
-              ),
-            },
-            {
-              title: 'ML Classifiers',
-              desc: 'XGBoost entry and exit models trained on 60,000+ price action samples. Pure TypeScript inference, no Python runtime. Open model weights planned.',
-              icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-              ),
-            },
-          ].map((engine) => (
-            <div key={engine.title} className="glass-card rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="text-accent">{engine.icon}</div>
-                <h3 className="text-sm font-semibold text-white">{engine.title}</h3>
+          {/* STATS */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-border rounded-xl overflow-hidden border border-border">
+            {stats.map((s) => (
+              <div key={s.label} className="bg-panel px-5 py-6">
+                <div className="text-2xl md:text-3xl font-bold accent-gradient font-mono">
+                  {s.value}
+                </div>
+                <div className="mt-1 text-xs md:text-sm text-muted uppercase tracking-wider">
+                  {s.label}
+                </div>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed">{engine.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-muted/60 max-w-2xl">
+            Latency shown is server-side processing time, benchmarked under full operator load.
+            Your total round-trip latency = our processing time + your network distance to Ashburn, VA.
+          </p>
         </div>
       </section>
 
-      <div className="divider max-w-2xl mx-auto" />
+      <div className="divider max-w-5xl mx-auto" />
 
-      {/* ── API Preview ── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">API</h2>
-        <p className="text-slate-500 text-center mb-8 sm:mb-10 max-w-lg mx-auto text-sm">
-          Live endpoints available now. Data exports and trending feeds coming soon.
-        </p>
-        <div className="glass-card rounded-xl p-4 sm:p-5 font-mono text-xs sm:text-sm overflow-x-auto">
-          <div className="space-y-2.5 sm:space-y-2 text-slate-400">
-            <div className="text-slate-600 text-xs mb-2 font-sans">LIVE</div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/stats</span> <span className="hidden sm:inline text-slate-600">— Live platform statistics</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/volume</span> <span className="hidden sm:inline text-slate-600">— Hourly trade volume aggregation</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/recent-tokens</span> <span className="hidden sm:inline text-slate-600">— Latest token launches</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/smart-wallets</span> <span className="hidden sm:inline text-slate-600">— Qualified smart wallet list</span></div>
-            <div><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/archiver/wallet/:addr</span> <span className="hidden sm:inline text-slate-600">— Wallet reputation lookup</span></div>
-            <div className="text-slate-600 text-xs mt-4 mb-2 font-sans">COMING SOON</div>
-            <div className="opacity-50"><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/trades</span> <span className="hidden sm:inline text-slate-600">— Historical trade queries with filtering</span></div>
-            <div className="opacity-50"><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/trending</span> <span className="hidden sm:inline text-slate-600">— Real-time trending tokens with momentum scores</span></div>
-            <div className="opacity-50"><span className="text-emerald-400">GET</span> <span className="text-slate-300">/api/export</span> <span className="hidden sm:inline text-slate-600">— Parquet data export (self-serve historical data)</span></div>
+
+      {/* FLAT RATE */}
+      <section className="max-w-7xl mx-auto px-6 py-20 md:py-24">
+        <div className="max-w-3xl">
+          <div className="text-xs font-mono uppercase tracking-widest text-accent mb-3">
+            Pricing model
+          </div>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink leading-tight">
+            Flat rate. No surprises.
+          </h2>
+          <p className="mt-5 text-lg text-muted leading-relaxed">
+            Flat monthly pricing. No compute units. No rate limits. No overages.
+            When we say $399/mo, your invoice says $399/mo. Every month.
+          </p>
+          <p className="mt-3 text-muted leading-relaxed">
+            We can offer this because we cap operators per colocation group &mdash;
+            when a group fills, we provision new hardware, not more seats.
+          </p>
+        </div>
+      </section>
+
+      <div className="divider max-w-5xl mx-auto" />
+
+      {/* HARDWARE SPECS */}
+      <section className="max-w-7xl mx-auto px-6 py-20 md:py-24">
+        <div className="grid md:grid-cols-5 gap-10 md:gap-16 items-start">
+          <div className="md:col-span-2">
+            <div className="text-xs font-mono uppercase tracking-widest text-accent mb-3">
+              Performance
+            </div>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink leading-tight">
+              Benchmarked. Not estimated.
+            </h2>
+            <p className="mt-5 text-muted leading-relaxed">
+              Every number on this page was measured under full load with all operator
+              slots active. Not synthetic benchmarks, not &ldquo;up to&rdquo; marketing
+              &mdash; real traffic, real contention, real results.
+            </p>
+            <p className="mt-3 text-muted leading-relaxed">
+              We cap at 10 operators. When we&apos;re full, we provision new hardware — we
+              don&apos;t oversubscribe.
+            </p>
+          </div>
+
+          <div className="md:col-span-3 card p-6 md:p-8">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+              {specs.map((s) => (
+                <div key={s.k}>
+                  <dt className="text-[11px] font-mono uppercase tracking-widest text-muted/80 mb-1">
+                    {s.k}
+                  </dt>
+                  <dd className="text-sm md:text-base text-ink font-medium">{s.v}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </section>
 
-      <div className="divider max-w-2xl mx-auto" />
+      {/* PRODUCTS */}
+      <section className="max-w-7xl mx-auto px-6 py-10">
+        <div className="text-xs font-mono uppercase tracking-widest text-accent mb-3">
+          Offerings
+        </div>
+        <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink mb-12 max-w-2xl">
+          Three ways to run on our iron.
+        </h2>
 
-      {/* ── Roadmap ── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3">Roadmap</h2>
-        <p className="text-slate-500 text-center mb-8 sm:mb-10 max-w-lg mx-auto text-sm">
-          What&apos;s shipped and what&apos;s next.
-        </p>
-        <div className="max-w-md mx-auto space-y-3">
-          {[
-            { done: true, text: 'Trade archive engine (14M+ trades)' },
-            { done: true, text: 'DuckDB columnar storage (60% compression)' },
-            { done: true, text: 'Wallet intelligence engine (2,200+ qualified wallets)' },
-            { done: true, text: 'ML exit/entry classifiers (60K+ training samples)' },
-            { done: true, text: 'Live archiver API (stats, volume, tokens, wallets)' },
-            { done: true, text: 'API documentation + multi-language examples' },
-            { done: false, text: 'Trending tokens dashboard (real-time momentum scoring)' },
-            { done: false, text: 'Token explorer (search any mint, full trade history)' },
-            { done: false, text: 'Wallet connect authentication + API keys' },
-            { done: false, text: 'Parquet data exports (self-serve historical data)' },
-            { done: false, text: 'Tiered access (free weekly export / paid dashboard)' },
-          ].map((item) => (
-            <div key={item.text} className="flex items-center gap-3">
-              {item.done ? (
-                <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              ) : (
-                <div className="w-4 h-4 rounded-full border border-slate-600 flex-shrink-0" />
-              )}
-              <span className={`text-sm ${item.done ? 'text-slate-300' : 'text-slate-500'}`}>
-                {item.text}
-              </span>
-            </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {products.map((p) => (
+            <Link
+              key={p.title}
+              href={p.href}
+              className="card p-6 md:p-7 flex flex-col group"
+            >
+              <div
+                className={`inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-2 py-1 rounded w-fit mb-5 ${
+                  p.tagLive
+                    ? 'bg-accent/10 text-accent-bright border border-accent/30'
+                    : 'bg-panel-2 text-muted border border-border'
+                }`}
+              >
+                {p.tagLive && <span className="pulse-dot !w-1.5 !h-1.5" />}
+                {p.tag}
+              </div>
+              <h3 className="text-xl font-semibold text-ink mb-3">{p.title}</h3>
+              <p className="text-sm text-muted leading-relaxed flex-1">{p.body}</p>
+              <div className="mt-6 flex items-center gap-2 text-sm font-medium text-accent group-hover:text-accent-bright transition-colors">
+                {p.cta}
+                <span className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
 
-      <div className="divider max-w-2xl mx-auto" />
 
-      {/* ── Open Source CTA ── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20 text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Open source, free tier, MIT license</h2>
-        <p className="text-slate-500 max-w-md mx-auto text-sm mb-8 leading-relaxed">
-          Data infrastructure that gives every builder in the Solana ecosystem
-          the same market intelligence that was previously only accessible to insiders.
-        </p>
-        <a
-          href="https://github.com/thecyberginehost/streamsuite"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 transition-colors text-sm font-medium"
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
-          View on GitHub
-        </a>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/5 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-slate-600 text-xs">StreamSuite &copy; 2026</span>
-          <div className="flex items-center gap-5">
-            <a href="https://github.com/thecyberginehost/streamsuite" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-400 transition-colors text-xs">GitHub</a>
-            <a href="https://x.com/streamsuite" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-400 transition-colors text-xs">Twitter</a>
-            <a href="mailto:hello@streamsuite.io" className="text-slate-600 hover:text-slate-400 transition-colors text-xs">Contact</a>
+      {/* OPERATIONAL POSTURE */}
+      <section className="max-w-7xl mx-auto px-6 py-10">
+        <div className="card p-6 md:p-8 border-accent/20">
+          <div className="flex items-start gap-4">
+            <div className="text-accent text-2xl mt-0.5">&#9670;</div>
+            <div>
+              <h3 className="text-lg font-semibold text-ink mb-2">Operational hardening</h3>
+              <p className="text-sm text-muted leading-relaxed">
+                Rate-limited reverse proxy, automated certificate management, intrusion
+                detection, and DDoS mitigation at the edge. Endpoints support IP whitelisting
+                on request. Same security posture serious operators would build themselves.
+              </p>
+            </div>
           </div>
         </div>
-      </footer>
-    </main>
+      </section>
+
+      {/* TRUST / EXCLUSIVITY */}
+      <section className="max-w-7xl mx-auto px-6 py-20 md:py-28">
+        <div className="card p-8 md:p-12 relative overflow-hidden">
+          <div className="absolute inset-0 grid-lines opacity-30 pointer-events-none" />
+          <div className="relative max-w-3xl">
+            <div className="pill mb-5">
+              <span>Limited availability</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-ink">
+              Ten operators per colocation group. When we&apos;re full, we&apos;re full.
+            </h2>
+            <p className="mt-5 text-muted leading-relaxed text-lg">
+              Ten operators per colocation group. When we&apos;re full, we&apos;re full &mdash;
+              we provision new hardware instead of oversubscribing existing boxes.
+              That physical cap is why we can offer flat-rate pricing with no
+              rate limits or overages: the hardware is never shared beyond what
+              it can handle cleanly.
+            </p>
+            <p className="mt-3 text-muted leading-relaxed">
+              If you&apos;re a retail dapp that needs 100 requests per second, you don&apos;t
+              need us — there are cheaper ways to do that. If you&apos;re running infrastructure
+              where a few milliseconds matters and you can&apos;t afford to be rate-limited
+              mid-block, we&apos;re the right call.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/request-access" className="btn-primary">
+                Request Access
+              </Link>
+              <Link href="/pricing" className="btn-ghost">
+                See full pricing
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
