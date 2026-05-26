@@ -227,7 +227,8 @@ export function QuickstartTabs({
 
   return (
     <div>
-      <div className="flex items-center gap-1 mb-3 overflow-x-auto -mx-1 px-1">
+      {/* Row 1: language tabs (own row so Reveal/Copy can't get clipped off-screen at 375px) */}
+      <div className="flex items-center gap-1 mb-2 overflow-x-auto -mx-1 px-1">
         {QS_LANGS.map((l) => (
           <button
             key={l}
@@ -239,16 +240,19 @@ export function QuickstartTabs({
             {l}
           </button>
         ))}
+      </div>
+      {/* Row 2: reveal + copy on their own row, right-aligned. Always visible on mobile. */}
+      <div className="flex items-center justify-end gap-1.5 mb-3">
         <button
           onClick={() => setRevealed(!revealed)}
-          className="ml-auto px-3 py-1.5 text-[11px] uppercase tracking-wider font-mono text-muted hover:text-ink border border-border rounded-sm shrink-0"
+          className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-mono text-muted hover:text-ink border border-border rounded-sm"
           aria-label={revealed ? 'Hide API key' : 'Reveal API key'}
         >
           {revealed ? 'Hide key' : 'Reveal key'}
         </button>
         <button
           onClick={copy}
-          className="px-3 py-1.5 text-[11px] uppercase tracking-wider font-mono text-accent hover:text-accent-bright border border-border rounded-sm shrink-0"
+          className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-mono text-accent hover:text-accent-bright border border-border rounded-sm"
         >
           {copied ? '✓ Copied' : 'Copy (with key)'}
         </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { StatCards, LiveTape, HealthDot } from './StatsLive';
 import {
   FirstCallBanner,
@@ -30,6 +31,8 @@ export function DashboardClient({
   price,
   apiKey,
   endpointHost,
+  cryptoPaidUntil,
+  hasStripeSubscription,
 }: {
   email: string;
   operatorId: string;
@@ -39,11 +42,28 @@ export function DashboardClient({
   price: string;
   apiKey: string;
   endpointHost: string;
+  cryptoPaidUntil: number | null;
+  hasStripeSubscription: boolean;
 }) {
   const [tab, setTab] = useState<Tab>('overview');
 
   const httpsUrl = `https://${endpointHost}/?key=${apiKey}`;
   const wssUrl = `wss://${endpointHost}/ws?key=${apiKey}`;
+
+  // Crypto-only customers have a one-time 30-day paid window (no recurring sub).
+  // They need expiry visibility + a crypto-renewal CTA instead of the Stripe
+  // billing portal (which 404s for them, since they have no stripe_customer_id).
+  const hasCryptoAccess = !!cryptoPaidUntil && cryptoPaidUntil > Date.now();
+  const isCryptoOnly = hasCryptoAccess && !hasStripeSubscription;
+  const cryptoExpiresLabel = cryptoPaidUntil
+    ? new Date(cryptoPaidUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
+  const cryptoExpiresShort = cryptoPaidUntil
+    ? new Date(cryptoPaidUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null;
+  const daysUntilCryptoExpiry = cryptoPaidUntil
+    ? Math.ceil((cryptoPaidUntil - Date.now()) / 86400000)
+    : null;
 
   return (
     <main className="px-4 sm:px-6 py-6 sm:py-10 max-w-6xl mx-auto pb-24 lg:pb-10">
@@ -64,10 +84,23 @@ export function DashboardClient({
             <span className="opacity-60">tier</span>
             <span className="text-ink">{label}</span>
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="opacity-60">billing</span>
-            <span className="text-ink">{price}</span>
-          </span>
+          {isCryptoOnly ? (
+            <span className="flex items-center gap-1.5" title={`Crypto access expires ${cryptoExpiresLabel}`}>
+              <span className="opacity-60">expires</span>
+              <span className={
+                daysUntilCryptoExpiry !== null && daysUntilCryptoExpiry <= 3
+                  ? 'text-yellow-400'
+                  : 'text-ink'
+              }>
+                {cryptoExpiresShort}
+              </span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5">
+              <span className="opacity-60">billing</span>
+              <span className="text-ink">{price}</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -156,13 +189,66 @@ export function DashboardClient({
             <Row label="Account" value={email} />
             <Row label="Operator ID" value={operatorId} />
             <Row label="Plan" value={label} />
-            <Row label="Price" value={price} />
+            <Row
+              label="Payment"
+              value={
+                isCryptoOnly
+                  ? 'Crypto (one-time, 30 days)'
+                  : hasStripeSubscription && hasCryptoAccess
+                  ? 'Stripe subscription + crypto top-up'
+                  : hasStripeSubscription
+                  ? `Stripe subscription · ${price}`
+                  : `Stripe · ${price}`
+              }
+            />
+            {cryptoExpiresLabel && (
+              <Row
+                label="Access until"
+                value={
+                  daysUntilCryptoExpiry !== null && daysUntilCryptoExpiry > 0
+                    ? `${cryptoExpiresLabel} (${daysUntilCryptoExpiry}d left)`
+                    : cryptoExpiresLabel
+                }
+                valueClass={
+                  daysUntilCryptoExpiry !== null && daysUntilCryptoExpiry <= 3
+                    ? 'text-yellow-400'
+                    : undefined
+                }
+              />
+            )}
             <Row label="Status" value={status.toUpperCase()} valueClass="text-accent-bright" />
           </div>
-          <BillingButton />
-          <p className="text-xs font-mono text-muted mt-4 leading-relaxed">
-            Update card, view invoices, or cancel subscription via Stripe&apos;s billing portal.
-          </p>
+
+          {/* Crypto renewal CTA — only crypto-paid customers can / should renew via crypto */}
+          {hasCryptoAccess && (
+            <div className="mb-4">
+              <Link
+                href={`/checkout/crypto/${tier}`}
+                className="btn-ghost !py-2 !px-3 text-xs font-mono uppercase tracking-wider w-full inline-flex items-center justify-center"
+              >
+                Renew with crypto →
+              </Link>
+              <p className="text-xs font-mono text-muted mt-2 leading-relaxed">
+                One-time payment extends your access by another 30 days. No auto-renewal.
+              </p>
+            </div>
+          )}
+
+          {/* Stripe portal — only customers with an active Stripe sub */}
+          {hasStripeSubscription && (
+            <div>
+              <BillingButton />
+              <p className="text-xs font-mono text-muted mt-2 leading-relaxed">
+                Update card, view invoices, or cancel subscription via Stripe&apos;s billing portal.
+              </p>
+            </div>
+          )}
+
+          {!hasStripeSubscription && !hasCryptoAccess && (
+            <p className="text-xs font-mono text-muted leading-relaxed">
+              No active payment method on file. <Link href="/pricing" className="text-accent hover:underline">View plans →</Link>
+            </p>
+          )}
         </section>
       )}
 

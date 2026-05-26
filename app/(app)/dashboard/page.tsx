@@ -62,6 +62,8 @@ export default async function DashboardPage() {
       price={tierPrice[customer.tier] || ''}
       apiKey={customer.api_key}
       endpointHost="va-bsc-01.streamsuite.io"
+      cryptoPaidUntil={customer.crypto_paid_until ?? null}
+      hasStripeSubscription={!!customer.stripe_subscription_id}
     />
   );
 }
