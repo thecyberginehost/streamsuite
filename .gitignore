@@ -1,4 +1,38 @@
+# Dependencies
 node_modules
 .next
 out
 *.tsbuildinfo
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime data (production DBs, logs, snapshots — never in git)
+data/
+backups/
+logs/
+
+# Local edit backups
+.backups/
+*.bak
+*.bak.*
+
+# Dev scratch — local-only debug scripts, kept on disk for convenience
+/get_token.js
+/get_token2.js
+/get_token3.js
+/db_check.js
+/db_check2.js
+/check_recent_tokens.js
+/check_sessions.js
+/backfill_key.js
+
+# IDE / OS
+.DS_Store
+.vscode
+.idea
+*.swp
