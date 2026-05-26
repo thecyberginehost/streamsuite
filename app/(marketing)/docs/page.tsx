@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import DocsTOC from '../../components/DocsTOC';
+import { CodeBlock } from '../../components/CodeBlock';
+import { CodeTabs } from '../../components/CodeTabs';
 
 export const metadata: Metadata = {
   title: 'Docs | StreamSuite',
@@ -10,31 +12,37 @@ export const metadata: Metadata = {
 
 type MethodRow = {
   method: string;
+  anchor: string;   // stable hash fragment; primary canonical method name
   desc: string;
   realtime: boolean;
   mempool: boolean;
   fullnode: boolean;
 };
 
+// Each entry has an explicit anchor (lowercased, single canonical method).
+// These are exposed at /docs#<anchor> and emitted in sitemap.ts so search
+// engines index per-method "this provider supports X" pages.
 const methods: MethodRow[] = [
-  { method: 'eth_blockNumber', desc: 'Latest block number', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getBlockByNumber / Hash', desc: 'Block data', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getTransactionByHash', desc: 'Transaction lookup', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getTransactionReceipt', desc: 'Receipt (~4.5d history)', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getBalance', desc: 'Account balance', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getCode', desc: 'Contract bytecode', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getStorageAt', desc: 'Storage slot read', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_call', desc: 'Read-only contract call', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_estimateGas', desc: 'Gas estimation', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_sendRawTransaction', desc: 'Submit signed tx', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_getLogs', desc: 'Event logs (~4.5d history)', realtime: true, mempool: true, fullnode: true },
-  { method: 'eth_gasPrice / maxPriorityFeePerGas', desc: 'Gas pricing', realtime: true, mempool: true, fullnode: true },
-  { method: 'net_version / web3_clientVersion', desc: 'Node identity', realtime: true, mempool: true, fullnode: true },
-  { method: 'txpool_content', desc: 'Full mempool contents', realtime: false, mempool: true, fullnode: true },
-  { method: 'txpool_inspect', desc: 'Mempool summary', realtime: false, mempool: true, fullnode: true },
-  { method: 'txpool_status', desc: 'Pending / queued counts', realtime: false, mempool: true, fullnode: true },
-  { method: 'debug_traceTransaction', desc: 'Execution trace (last ~128 blocks, chain-tip only)', realtime: false, mempool: false, fullnode: true },
+  { method: 'eth_blockNumber',                       anchor: 'eth_blocknumber',         desc: 'Latest block number',                                  realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getBlockByNumber / Hash',           anchor: 'eth_getblockbynumber',    desc: 'Block data',                                            realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getTransactionByHash',              anchor: 'eth_gettransactionbyhash',desc: 'Transaction lookup',                                    realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getTransactionReceipt',             anchor: 'eth_gettransactionreceipt',desc: 'Receipt (~4.5d history)',                              realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getBalance',                        anchor: 'eth_getbalance',          desc: 'Account balance',                                       realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getCode',                           anchor: 'eth_getcode',             desc: 'Contract bytecode',                                     realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getStorageAt',                      anchor: 'eth_getstorageat',        desc: 'Storage slot read',                                     realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_call',                              anchor: 'eth_call',                desc: 'Read-only contract call',                               realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_estimateGas',                       anchor: 'eth_estimategas',         desc: 'Gas estimation',                                        realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_sendRawTransaction',                anchor: 'eth_sendrawtransaction',  desc: 'Submit signed tx',                                      realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_getLogs',                           anchor: 'eth_getlogs',             desc: 'Event logs (~4.5d history)',                            realtime: true,  mempool: true,  fullnode: true },
+  { method: 'eth_gasPrice / maxPriorityFeePerGas',   anchor: 'eth_gasprice',            desc: 'Gas pricing',                                           realtime: true,  mempool: true,  fullnode: true },
+  { method: 'net_version / web3_clientVersion',      anchor: 'net_version',             desc: 'Node identity',                                         realtime: true,  mempool: true,  fullnode: true },
+  { method: 'txpool_content',                        anchor: 'txpool_content',          desc: 'Full mempool contents',                                 realtime: false, mempool: true,  fullnode: true },
+  { method: 'txpool_inspect',                        anchor: 'txpool_inspect',          desc: 'Mempool summary',                                       realtime: false, mempool: true,  fullnode: true },
+  { method: 'txpool_status',                         anchor: 'txpool_status',           desc: 'Pending / queued counts',                               realtime: false, mempool: true,  fullnode: true },
+  { method: 'debug_traceTransaction',                anchor: 'debug_tracetransaction',  desc: 'Execution trace (last ~128 blocks, chain-tip only)',    realtime: false, mempool: false, fullnode: true },
 ];
+
+export { methods as DOCS_METHODS };
 
 type SubRow = {
   name: string;
@@ -262,9 +270,9 @@ export default function Docs() {
         <div className="grid md:grid-cols-2 gap-5">
           <div className="card p-6">
             <div className="text-xs font-mono uppercase tracking-wider text-muted mb-2">HTTP</div>
-            <pre className="code-block text-sm break-all whitespace-pre-wrap">
+            <CodeBlock className="text-sm break-all whitespace-pre-wrap">
               https://va-bsc-01.streamsuite.io/?key=YOUR_API_KEY
-            </pre>
+            </CodeBlock>
             <p className="text-xs text-muted mt-3">
               Standard JSON-RPC POST. Methods go in the body. The API key can be
               sent in the query string (<code className="font-mono text-accent">?key=...</code>)
@@ -276,9 +284,9 @@ export default function Docs() {
           </div>
           <div className="card p-6">
             <div className="text-xs font-mono uppercase tracking-wider text-muted mb-2">WebSocket</div>
-            <pre className="code-block text-sm break-all whitespace-pre-wrap">
+            <CodeBlock className="text-sm break-all whitespace-pre-wrap">
               wss://va-bsc-01.streamsuite.io/ws?key=YOUR_API_KEY
-            </pre>
+            </CodeBlock>
             <p className="text-xs text-muted mt-3">
               Persistent connection for subscriptions. Use{' '}
               <code className="font-mono text-accent">eth_subscribe</code> with one of the
@@ -301,13 +309,9 @@ export default function Docs() {
           first call doesn&apos;t return in &lt;100ms (plus your network distance
           to Ashburn, VA), something&apos;s wrong &mdash; tell us.
         </p>
-        <div className="card overflow-hidden">
-          <div className="px-5 py-3 border-b border-border bg-panel-2 flex items-center justify-between">
-            <span className="font-mono text-xs uppercase tracking-wider text-ink">curl</span>
-            <span className="font-mono text-[10px] text-muted">any shell</span>
-          </div>
-          <pre className="code-block !rounded-none !border-0 text-[10px] sm:text-xs overflow-x-auto whitespace-pre"><code>{curlExample}</code></pre>
-        </div>
+        <CodeBlock framed label="curl" hint="any shell" className="text-[10px] sm:text-xs overflow-x-auto whitespace-pre">
+          {curlExample}
+        </CodeBlock>
       </section>
 
       {/* MIGRATION FROM INCUMBENTS — switching cost = one line ───────────── */}
@@ -393,9 +397,16 @@ export default function Docs() {
               </thead>
               <tbody>
                 {methods.map((m) => (
-                  <tr key={m.method} className="border-b border-border/60 last:border-b-0">
+                  <tr key={m.anchor} id={m.anchor} className="group border-b border-border/60 last:border-b-0 scroll-mt-20">
                     <td className="px-5 py-2.5 font-mono text-accent-bright text-xs md:text-sm whitespace-nowrap">
-                      {m.method}
+                      <a
+                        href={`#${m.anchor}`}
+                        className="hover:underline decoration-accent/40 underline-offset-4"
+                        aria-label={`Permalink to ${m.method}`}
+                      >
+                        {m.method}
+                        <span className="ml-1.5 text-muted/50 opacity-0 group-hover:opacity-100 transition-opacity">#</span>
+                      </a>
                     </td>
                     <td className="px-5 py-2.5 text-muted text-xs md:text-sm hidden sm:table-cell">
                       {m.desc}
@@ -445,8 +456,7 @@ export default function Docs() {
           </div>
         </div>
 
-        <pre className="code-block">
-{`// Raw eth_subscribe over WebSocket
+        <CodeBlock>{`// Raw eth_subscribe over WebSocket
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -479,8 +489,7 @@ export default function Docs() {
   "id": 4,
   "method": "eth_subscribe",
   "params": ["newPendingTransactions", true]
-}`}
-        </pre>
+}`}</CodeBlock>
       </section>
 
       {/* CODE EXAMPLES */}
@@ -490,39 +499,15 @@ export default function Docs() {
         </h2>
         <h3 className="text-2xl md:text-3xl font-semibold text-ink mb-6">Connect from anywhere</h3>
 
-        <div className="grid gap-5">
-          <div className="card overflow-hidden">
-            <div className="px-5 py-3 border-b border-border bg-panel-2 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wider text-ink">TypeScript &middot; viem</span>
-              <span className="font-mono text-[10px] text-muted">node / edge / browser</span>
-            </div>
-            <pre className="code-block !rounded-none !border-0"><code>{viemExample}</code></pre>
-          </div>
-
-          <div className="card overflow-hidden">
-            <div className="px-5 py-3 border-b border-border bg-panel-2 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wider text-ink">JavaScript &middot; ethers v6</span>
-              <span className="font-mono text-[10px] text-muted">node / browser</span>
-            </div>
-            <pre className="code-block !rounded-none !border-0"><code>{jsExample}</code></pre>
-          </div>
-
-          <div className="card overflow-hidden">
-            <div className="px-5 py-3 border-b border-border bg-panel-2 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wider text-ink">Python &middot; web3.py + websockets</span>
-              <span className="font-mono text-[10px] text-muted">python 3.10+</span>
-            </div>
-            <pre className="code-block !rounded-none !border-0"><code>{pyExample}</code></pre>
-          </div>
-
-          <div className="card overflow-hidden">
-            <div className="px-5 py-3 border-b border-border bg-panel-2 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wider text-ink">Rust &middot; alloy 0.x</span>
-              <span className="font-mono text-[10px] text-muted">tokio runtime · alloy 1.x renames .on_ws() → .connect_ws()</span>
-            </div>
-            <pre className="code-block !rounded-none !border-0"><code>{rustExample}</code></pre>
-          </div>
-        </div>
+        <CodeTabs
+          tabs={[
+            { id: 'viem',    label: 'TS · viem',     hint: 'node / edge / browser',                                            code: viemExample },
+            { id: 'ethers',  label: 'JS · ethers',   hint: 'node / browser',                                                   code: jsExample },
+            { id: 'web3py',  label: 'Python · web3', hint: 'python 3.10+',                                                     code: pyExample },
+            { id: 'alloy',   label: 'Rust · alloy',  hint: 'tokio runtime · alloy 1.x renames .on_ws() → .connect_ws()',       code: rustExample },
+          ]}
+          defaultTab="viem"
+        />
       </section>
 
       {/* WEBSOCKET RECONNECTION — production-essential pattern ─────────── */}
@@ -540,13 +525,9 @@ export default function Docs() {
           silently stop receiving events. Pattern below: exponential backoff,
           resubscribe on reconnect, reset backoff on success.
         </p>
-        <div className="card overflow-hidden">
-          <div className="px-5 py-3 border-b border-border bg-panel-2 flex items-center justify-between">
-            <span className="font-mono text-xs uppercase tracking-wider text-ink">TypeScript &middot; ws</span>
-            <span className="font-mono text-[10px] text-muted">node</span>
-          </div>
-          <pre className="code-block !rounded-none !border-0"><code>{wsReconnectExample}</code></pre>
-        </div>
+        <CodeBlock framed label="TypeScript · ws" hint="node">
+          {wsReconnectExample}
+        </CodeBlock>
         <p className="text-xs text-muted mt-3 leading-relaxed max-w-3xl">
           ethers&apos; <code className="font-mono text-accent">WebSocketProvider</code> and
           viem&apos;s <code className="font-mono text-accent">webSocket</code> transport
