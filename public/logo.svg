@@ -1,17 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 200" role="img" aria-label="StreamSuite">
   <title>StreamSuite</title>
-  <!-- mark on the left, currentColor so callers can re-tint -->
-  <g fill="none" stroke="#34d399" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="28" y="36" width="200" height="184" rx="22" ry="22" transform="translate(0,-18)" />
-    <line x1="28" y1="72" x2="228" y2="72" transform="translate(0,-18)" />
-    <line x1="56"  y1="112" x2="172" y2="112" transform="translate(0,-18)" />
-    <line x1="56"  y1="148" x2="148" y2="148" transform="translate(0,-18)" />
-    <line x1="56"  y1="184" x2="124" y2="184" transform="translate(0,-18)" />
-    <circle cx="190" cy="112" r="11" fill="#34d399" stroke-width="0" transform="translate(0,-18)" />
-    <circle cx="166" cy="148" r="11" fill="#34d399" stroke-width="0" transform="translate(0,-18)" />
-    <circle cx="142" cy="184" r="11" fill="#34d399" stroke-width="0" transform="translate(0,-18)" />
+  <!-- mark on the left -->
+  <g fill="none" stroke="#34d399" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,-18)">
+    <path d="M 62 52 L 36 52 L 36 204 L 62 204"/>
+    <path d="M 194 52 L 220 52 L 220 204 L 194 204"/>
+    <path d="M 62 128 L 96 128 L 114 72 L 140 184 L 160 128 L 194 128"/>
   </g>
-  <!-- wordmark: "Stream" in ink, "Suite" in accent green -->
+  <!-- wordmark: Stream in ink, Suite in accent -->
   <text x="276" y="138"
         font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Menlo, Consolas, monospace"
         font-weight="700" font-size="92" letter-spacing="-4">

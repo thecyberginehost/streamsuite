@@ -27,20 +27,15 @@ export default function Navbar() {
             viewBox="0 0 256 256"
             fill="none"
             stroke="currentColor"
-            strokeWidth="14"
+            strokeWidth="22"
             strokeLinecap="round"
             strokeLinejoin="round"
             className="text-accent group-hover:text-accent-bright transition-colors shrink-0"
             aria-hidden
           >
-            <rect x="28" y="36" width="200" height="184" rx="22" ry="22" />
-            <line x1="28" y1="72" x2="228" y2="72" />
-            <line x1="56" y1="112" x2="172" y2="112" />
-            <line x1="56" y1="148" x2="148" y2="148" />
-            <line x1="56" y1="184" x2="124" y2="184" />
-            <circle cx="190" cy="112" r="11" fill="currentColor" stroke="none" />
-            <circle cx="166" cy="148" r="11" fill="currentColor" stroke="none" />
-            <circle cx="142" cy="184" r="11" fill="currentColor" stroke="none" />
+            <path d="M 62 52 L 36 52 L 36 204 L 62 204" />
+            <path d="M 194 52 L 220 52 L 220 204 L 194 204" />
+            <path d="M 62 128 L 96 128 L 114 72 L 140 184 L 160 128 L 194 128" />
           </svg>
           <span className="font-semibold tracking-tight text-ink">StreamSuite</span>
           <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-wider text-accent/70 border border-accent/20 rounded px-1.5 py-0.5 ml-1">
