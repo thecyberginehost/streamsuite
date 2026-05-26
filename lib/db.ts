@@ -60,13 +60,19 @@ export function db(): Database.Database {
   // Crypto payment tracking. crypto_paid_until is a unix-ms timestamp; null for
   // Stripe customers. Set on successful NOWPayments webhook to now + 30 days.
   // crypto_last_invoice_id is the most recent NOWPayments invoice id for renewals.
-  // (Auto-revoke job that flips status → past_due when crypto_paid_until < now()
-  // is TODO — for v1, manual review or operator script.)
+  // crypto_expiry_notified_at is when we sent the T-3-days renewal reminder;
+  // cleared on renewal so the next cycle gets a fresh notification window.
+  // expiry-cron.js handles the T-3 reminder and the post-expiry status='expired'
+  // flip (status='expired' is excluded from /api/internal/customers, which
+  // revokes nginx-level RPC access on the next 5s sync).
   if (!colNames.has('crypto_paid_until')) {
     _db.exec("ALTER TABLE customers ADD COLUMN crypto_paid_until INTEGER");
   }
   if (!colNames.has('crypto_last_invoice_id')) {
     _db.exec("ALTER TABLE customers ADD COLUMN crypto_last_invoice_id TEXT");
+  }
+  if (!colNames.has('crypto_expiry_notified_at')) {
+    _db.exec("ALTER TABLE customers ADD COLUMN crypto_expiry_notified_at INTEGER");
   }
   _db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_github_id ON customers(github_id) WHERE github_id IS NOT NULL;`);
 
@@ -157,7 +163,7 @@ export type Customer = {
   operator_id: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
-  status: 'pending' | 'active' | 'past_due' | 'cancelled';
+  status: 'pending' | 'active' | 'past_due' | 'cancelled' | 'expired';
   created_at: number;
   updated_at: number;
   github_id: number | null;
@@ -165,6 +171,10 @@ export type Customer = {
   colo_group: string;
   crypto_paid_until: number | null;
   crypto_last_invoice_id: string | null;
+  crypto_expiry_notified_at: number | null;
+  onboarding_day1_at: number | null;
+  onboarding_day3_at: number | null;
+  onboarding_day14_at: number | null;
 };
 
 // Operator ID generator — 4-char uppercase alphanumeric, excludes 0/O/1/I/L
@@ -302,13 +312,15 @@ export function upsertCustomerFromCryptoPayment(opts: {
   const existing = db().prepare('SELECT * FROM customers WHERE email = ?').get(opts.email) as Customer | undefined;
 
   if (existing) {
-    // Renewal or tier change — extend paid_until, keep existing api_key
+    // Renewal or tier change — extend paid_until, keep existing api_key.
+    // Clear crypto_expiry_notified_at so the next cycle's T-3 reminder fires.
     db().prepare(`
       UPDATE customers
       SET tier = ?,
           status = 'active',
           crypto_paid_until = ?,
           crypto_last_invoice_id = ?,
+          crypto_expiry_notified_at = NULL,
           updated_at = ?
       WHERE email = ?
     `).run(opts.tier, opts.paid_until, opts.invoice_id, now, opts.email);
