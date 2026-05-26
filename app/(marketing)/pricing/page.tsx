@@ -43,6 +43,7 @@ const bscTiers: Tier[] = [
       'eth_call, eth_estimateGas, eth_sendRawTransaction',
       'newHeads and logs subscriptions',
       '~4.5 days block, log & receipt history (last 900k blocks)',
+      '10 concurrent connections (HTTP + WS combined)',
       'Email support',
     ],
     support: 'Email',
@@ -60,6 +61,7 @@ const bscTiers: Tier[] = [
       'Everything in Real-Time',
       'txpool_content, txpool_inspect, txpool_status',
       'newPendingTransactions WebSocket subscription (hashes or full tx objects)',
+      '20 concurrent connections (HTTP + WS combined)',
       'Direct Telegram / Discord support (contact sent in welcome email)',
       'Priority response < 4 business hours',
     ],
@@ -79,6 +81,7 @@ const bscTiers: Tier[] = [
       'Everything in Mempool',
       'debug_traceTransaction on the last ~128 blocks (~60 sec, chain-tip only)',
       'Sole debug-access tenant: only 1 Full Node customer per server',
+      '30 concurrent connections (HTTP + WS combined)',
       'Need deeper trace history? Ask about the Archive add-on',
       'Direct Telegram to operator (contact sent in welcome email)',
       'Hardware-level diagnostics on request',
@@ -403,10 +406,18 @@ export default async function Pricing() {
             &ldquo;What if I go over some limit?&rdquo;
           </h3>
           <p className="text-sm text-muted leading-relaxed">
-            You won&apos;t. There isn&apos;t one. No rate limits, no request caps, no CUs.
-            We&apos;d rather sell you a tier that fits your workload than bill you
-            extra when you exceed it. The tiers differ by which methods are
-            exposed and support level, not by volume.
+            No rate limits, no request caps, no compute-unit math. Fire as many
+            requests per second as your bot can handle &mdash; we don&apos;t meter
+            volume, we don&apos;t bill overages, and you won&apos;t get throttled.
+          </p>
+          <p className="text-sm text-muted leading-relaxed mt-3">
+            The one cap that exists is on <span className="text-ink">simultaneous
+            connections</span> per API key (10 / 20 / 30 depending on tier) &mdash;
+            pure anti-abuse so one bad actor can&apos;t hog the node. A normal
+            single-bot setup uses 5&ndash;11 connections, well under every cap.
+            If you genuinely need more concurrent connections than the Full
+            Node tier provides, ask about a <span className="text-ink">dedicated
+            server</span> (unlisted tier, contact us).
           </p>
         </div>
       </section>
