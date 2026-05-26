@@ -642,15 +642,46 @@ export default function Docs() {
           </p>
           <div className="mt-6 pt-6 border-t border-border">
             <p className="font-semibold text-ink text-sm mb-2">Connection-level guards (not usage limits):</p>
+            <div className="card overflow-hidden mb-3 mt-3">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-panel-2">
+                    <th className="text-left px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-muted font-medium">Tier</th>
+                    <th className="text-right px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-muted font-medium">Concurrent (HTTP + WSS)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-border/60">
+                    <td className="px-4 py-2.5 font-mono text-accent-bright">Real-Time</td>
+                    <td className="px-4 py-2.5 text-right font-mono text-ink">10</td>
+                  </tr>
+                  <tr className="border-b border-border/60">
+                    <td className="px-4 py-2.5 font-mono text-accent-bright">Mempool</td>
+                    <td className="px-4 py-2.5 text-right font-mono text-ink">20</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2.5 font-mono text-accent-bright">Full Node</td>
+                    <td className="px-4 py-2.5 text-right font-mono text-ink">30</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <ul className="space-y-2 text-sm text-muted leading-relaxed">
               <li>
-                <span className="font-mono text-accent">50</span> concurrent WebSocket
-                connections per API key. Pool your subscriptions if you need more;
-                contact us for a higher cap if pooling isn&apos;t practical.
+                Cap counts HTTP and WebSocket connections together. A single bot
+                with sensible HTTP pooling and 1-2 WSS subscriptions uses ~5-11
+                connections &mdash; comfortably below every cap.
               </li>
               <li>
-                <span className="font-mono text-accent">100</span> concurrent connections
-                per source IP (HTTP + WS combined). Anti-abuse cap, not usage.
+                Hit the cap with a real workload? You&apos;re likely running
+                multiple bots or services from one key. Buy another slot (or
+                request a <em>dedicated server</em>, which lifts the cap entirely
+                &mdash; not a published tier, contact us).
+              </li>
+              <li>
+                <span className="font-mono text-accent">100</span> concurrent
+                connections per source IP (HTTP + WSS combined). Anti-abuse cap,
+                not usage. Independent of the per-key tier cap above.
               </li>
             </ul>
           </div>
