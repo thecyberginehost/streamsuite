@@ -752,8 +752,8 @@ export default function Docs() {
                 </tr>
                 <tr className="border-b border-border/40">
                   <td className="px-5 py-3 font-mono">429</td>
-                  <td className="px-5 py-3 font-mono">HTML body (nginx default)</td>
-                  <td className="px-5 py-3 text-muted">Connection cap hit. Either you exceeded your tier&apos;s concurrent-connection cap (Real-Time <code>10</code> / Mempool <code>20</code> / Full Node <code>30</code>, HTTP + WSS combined) or the <code>100</code>-per-source-IP anti-abuse cap. Pool subscriptions, distribute load across IPs, or request a <em>dedicated server</em> if your real-world workload genuinely exceeds Full Node&apos;s cap.</td>
+                  <td className="px-5 py-3 font-mono break-all">{`{"error":{"code":-32005,"message":"connection limit exceeded for this API key"}}`}</td>
+                  <td className="px-5 py-3 text-muted">Connection cap hit. Either you exceeded your tier&apos;s concurrent-connection cap (Real-Time <code>10</code> / Mempool <code>20</code> / Full Node <code>30</code>, HTTP + WSS combined) or the <code>100</code>-per-source-IP anti-abuse cap. EIP-1474 code <code>-32005</code> means &quot;limit exceeded&quot; — ethers / viem / web3.py surface this as a parseable error rather than failing on response decode. Pool subscriptions, distribute load across IPs, or request a <em>dedicated server</em>.</td>
                 </tr>
                 <tr className="border-b border-border/40">
                   <td className="px-5 py-3 font-mono">200</td>
