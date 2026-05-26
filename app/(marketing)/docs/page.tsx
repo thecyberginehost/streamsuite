@@ -520,7 +520,7 @@ export default function Docs() {
         </h3>
         <p className="text-muted text-sm leading-relaxed mb-6 max-w-3xl">
           The connection will drop occasionally &mdash; network blips, server
-          restarts, idle timeouts. Our 10-minute stress test recorded 0 WS reconnects,
+          restarts, idle timeouts. Our 30-minute stress test recorded 0 WS reconnects,
           but production is messy. Bots that don&apos;t handle reconnect
           silently stop receiving events. Pattern below: exponential backoff,
           resubscribe on reconnect, reset backoff on success.
@@ -753,7 +753,7 @@ export default function Docs() {
                 <tr className="border-b border-border/40">
                   <td className="px-5 py-3 font-mono">429</td>
                   <td className="px-5 py-3 font-mono">HTML body (nginx default)</td>
-                  <td className="px-5 py-3 text-muted">Connection or rate limit hit. Either: <code>&gt;50</code> concurrent connections per API key, <code>&gt;100</code> concurrent connections per source IP, or rate limits on the public latency endpoints. Pool subscriptions, distribute load across IPs, or ask for a higher cap.</td>
+                  <td className="px-5 py-3 text-muted">Connection cap hit. Either you exceeded your tier&apos;s concurrent-connection cap (Real-Time <code>10</code> / Mempool <code>20</code> / Full Node <code>30</code>, HTTP + WSS combined) or the <code>100</code>-per-source-IP anti-abuse cap. Pool subscriptions, distribute load across IPs, or request a <em>dedicated server</em> if your real-world workload genuinely exceeds Full Node&apos;s cap.</td>
                 </tr>
                 <tr className="border-b border-border/40">
                   <td className="px-5 py-3 font-mono">200</td>
@@ -788,15 +788,18 @@ export default function Docs() {
           <div>
             <p className="font-semibold mb-1">Chunk <code className="font-mono text-accent">eth_getLogs</code> into ≤1000-block ranges</p>
             <p className="text-muted">
-              Log queries scan blocks and are I/O-sensitive &mdash; our own stress
-              test (see <Link href="/benchmarks" className="text-accent hover:underline">/benchmarks</Link>)
-              shows getLogs p50 stays under 1ms but p95 climbs to ~20ms as range
-              widens. For live event tracking use{' '}
-              <code className="font-mono text-accent">eth_subscribe logs</code> with a
-              topic filter (constant-cost regardless of chain depth). For
-              historical scans, chunk by 1000 blocks max and parallelize 3-5 chunks
-              at a time. Don&apos;t request a single 500k-block window &mdash; you&apos;ll
-              get the wide tail every time and may time out.
+              Log queries scan blocks and are I/O-sensitive &mdash; our 30-min
+              stress test (see <Link href="/benchmarks" className="text-accent hover:underline">/benchmarks</Link>)
+              shows <code className="font-mono text-accent">eth_getLogs</code>{' '}
+              p50 stays under 1ms but the p99 tail ranges 40&ndash;300ms at 12&ndash;20
+              concurrent clients on a 50-block window. Wider ranges and higher
+              concurrency push it further. For live event tracking, use{' '}
+              <code className="font-mono text-accent">eth_subscribe logs</code> with
+              a topic filter (constant-cost regardless of chain depth). For
+              historical scans, chunk by 1000 blocks max and parallelize
+              3&ndash;5 chunks at a time. Don&apos;t request a single 500k-block
+              window &mdash; you&apos;ll get the wide tail every time and may
+              time out.
             </p>
           </div>
           <div>
