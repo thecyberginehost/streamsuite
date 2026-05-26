@@ -6,13 +6,13 @@ import ColoSlots from '../components/ColoSlots';
 // via <ColoSlots variant="stat" /> so it can fetch live data — it's not in
 // this static array.
 const stats = [
-  { value: '<6ms', label: 'Server-side latency' },
+  { value: '<10ms', label: 'Server-side p99' },
   { value: '0', label: 'Rate limits' },
-  { value: '1hr', label: 'Sev-1 SLA · 24/7' },
+  { value: '24/7', label: 'Telegram + email' },
 ];
 
 const specs = [
-  { k: 'Server-side latency', v: '< 1ms median, < 6ms p99 (eth_call under 10-client production load)' },
+  { k: 'Server-side latency', v: '< 1ms median, < 10ms p99 (eth_call across 10–20 client stress test)' },
   { k: 'IPC latency', v: '< 1ms median (colocation tier, benchmarked under full load)' },
   { k: 'Rate limits', v: 'None. Unlimited requests, unlimited subscriptions.' },
   { k: 'Location', v: 'Ashburn, VA. Tier-III datacenter (N+1 power & cooling, SOC 2 Type II, ISO 27001)' },

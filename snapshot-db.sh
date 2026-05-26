@@ -5,6 +5,13 @@
 
 set -euo pipefail
 
+# Absolute node path — cron's bash -lc + nvm.sh sourcing does NOT reliably
+# propagate the nvm-managed PATH into this script's sub-shell. Hard-coding
+# the binary avoids the "node: command not found" loop we hit between
+# 2026-05-16 and 2026-05-26 (10 days of silently failing snapshots).
+# Override with $NODE env var if the version path changes.
+NODE="${NODE:-/home/filthy/.nvm/versions/node/v22.22.0/bin/node}"
+
 DB=/home/filthy/streamsuite/data/streamsuite.db
 BACKUP_DIR=/home/filthy/streamsuite/backups
 KEEP=96
@@ -16,7 +23,7 @@ TS=$(date -u +%Y%m%d-%H%M%S)
 DEST="$BACKUP_DIR/streamsuite-$TS.db"
 
 # better-sqlite3 doesn't ship sqlite3 CLI; use node.
-node -e "
+"$NODE" -e "
   const Database = require('/home/filthy/streamsuite/node_modules/better-sqlite3');
   const src = new Database('$DB', { readonly: true });
   src.backup('$DEST').then(() => {
@@ -33,7 +40,7 @@ gzip -9 "$DEST"
 DEST="$DEST.gz"
 
 # Validate the snapshot is readable
-node -e "
+"$NODE" -e "
   const fs = require('fs');
   const zlib = require('zlib');
   const Database = require('/home/filthy/streamsuite/node_modules/better-sqlite3');
