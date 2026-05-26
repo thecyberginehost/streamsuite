@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 140" role="img" aria-label="StreamSuite">
+  <title>StreamSuite</title>
+  <text x="400" y="98" text-anchor="middle"
+        font-family="'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-weight="800" font-size="100" letter-spacing="-3">
+    <tspan fill="#e5e9f0">Stream</tspan><tspan fill="#34d399">Suite</tspan>
+  </text>
+</svg>

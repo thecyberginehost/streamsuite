@@ -13,34 +13,23 @@ export default function Footer() {
           </span>
         </div>
 
-        <nav className="flex flex-wrap items-center gap-6 text-sm">
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <Link href="/" className="text-muted hover:text-ink transition-colors">Home</Link>
           <Link href="/pricing" className="text-muted hover:text-ink transition-colors">Pricing</Link>
           <Link href="/docs" className="text-muted hover:text-ink transition-colors">Docs</Link>
-          <Link href="/request-access" className="text-muted hover:text-ink transition-colors">Request Access</Link>
+          <Link href="/benchmarks" className="text-muted hover:text-ink transition-colors">Benchmarks</Link>
+          <Link href="/status" className="text-muted hover:text-ink transition-colors">Status</Link>
+          <Link href="/login" className="text-muted hover:text-ink transition-colors">Sign in</Link>
+          <Link href="/request-access" className="text-muted hover:text-ink transition-colors">Custom builds</Link>
+          <Link href="/support" className="text-muted hover:text-ink transition-colors">Support</Link>
+          <Link href="/legal/terms" className="text-muted hover:text-ink transition-colors">Terms</Link>
+          <Link href="/legal/privacy" className="text-muted hover:text-ink transition-colors">Privacy</Link>
+          <Link href="/legal/refunds" className="text-muted hover:text-ink transition-colors">Refunds</Link>
           <a
-            href="mailto:hello@streamsuite.io"
+            href="mailto:support@streamsuite.io"
             className="text-muted hover:text-ink transition-colors"
           >
-            hello@streamsuite.io
-          </a>
-          <a
-            href="https://twitter.com/streamsuite"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted hover:text-ink transition-colors"
-            aria-label="Twitter"
-          >
-            X / Twitter
-          </a>
-          <a
-            href="https://github.com/streamsuite"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted hover:text-ink transition-colors"
-            aria-label="GitHub"
-          >
-            GitHub
+            support@streamsuite.io
           </a>
         </nav>
       </div>

@@ -1,0 +1,20 @@
+# Log rotation for StreamSuite application logs.
+# Install: sudo cp streamsuite-logs-logrotate /etc/logrotate.d/streamsuite
+# Verify: sudo logrotate -d /etc/logrotate.d/streamsuite
+
+/home/filthy/streamsuite/logs/*.log
+/home/filthy/streamsuite/logs/*.jsonl
+{
+    weekly
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 filthy filthy
+    # The Next.js app keeps a long-lived file handle to stripe-events.jsonl
+    # (it appends to it on every webhook). After rotation we need to send it
+    # a signal so it re-opens its log file — but we currently use fs.appendFile
+    # which opens on each write, so no signal needed. Left as note for future.
+    sharedscripts
+}

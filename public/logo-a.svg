@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 140" role="img" aria-label="StreamSuite">
+  <title>StreamSuite</title>
+  <defs>
+    <linearGradient id="grad-a" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6ee7b7"/>
+      <stop offset="55%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <text x="400" y="98" text-anchor="middle"
+        font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Menlo, Consolas, monospace"
+        font-weight="700" font-size="92" letter-spacing="-3"
+        fill="url(#grad-a)">StreamSuite</text>
+</svg>

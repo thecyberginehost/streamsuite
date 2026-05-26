@@ -1,21 +1,28 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./app/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       colors: {
-        accent: '#22d3ee',        // cyan-400
-        'accent-dim': '#0891b2',  // cyan-600
-        surface: '#0f172a',       // slate-900
-        'surface-light': '#1e293b', // slate-800
-        'surface-border': 'rgba(34, 211, 238, 0.1)',
+        bg: '#07090c',
+        panel: '#0d1117',
+        'panel-2': '#111821',
+        border: 'rgba(52, 211, 153, 0.12)',
+        'border-strong': 'rgba(52, 211, 153, 0.28)',
+        accent: '#34d399',
+        'accent-dim': '#10b981',
+        'accent-bright': '#6ee7b7',
+        cyan: '#22d3ee',
+        muted: '#8b96a7',
+        ink: '#e5e9f0',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+      },
+      boxShadow: {
+        glow: '0 0 40px -10px rgba(52, 211, 153, 0.35)',
       },
     },
   },
