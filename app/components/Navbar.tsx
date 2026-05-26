@@ -35,7 +35,10 @@ export default function Navbar() {
           >
             <path d="M 62 52 L 36 52 L 36 204 L 62 204" />
             <path d="M 194 52 L 220 52 L 220 204 L 194 204" />
-            <path d="M 62 128 L 96 128 L 114 72 L 140 184 L 160 128 L 194 128" />
+            <circle cx="86" cy="100" r="12" fill="currentColor" stroke="none" />
+            <circle cx="86" cy="156" r="12" fill="currentColor" stroke="none" />
+            <line x1="120" y1="184" x2="148" y2="72" />
+            <line x1="156" y1="184" x2="184" y2="72" />
           </svg>
           <span className="font-semibold tracking-tight text-ink">StreamSuite</span>
           <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-wider text-accent/70 border border-accent/20 rounded px-1.5 py-0.5 ml-1">

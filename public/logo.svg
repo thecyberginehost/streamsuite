@@ -1,12 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 200" role="img" aria-label="StreamSuite">
   <title>StreamSuite</title>
-  <!-- mark on the left -->
   <g fill="none" stroke="#34d399" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,-18)">
     <path d="M 62 52 L 36 52 L 36 204 L 62 204"/>
     <path d="M 194 52 L 220 52 L 220 204 L 194 204"/>
-    <path d="M 62 128 L 96 128 L 114 72 L 140 184 L 160 128 L 194 128"/>
+    <circle cx="86" cy="100" r="12" fill="#34d399" stroke="none"/>
+    <circle cx="86" cy="156" r="12" fill="#34d399" stroke="none"/>
+    <line x1="120" y1="184" x2="148" y2="72"/>
+    <line x1="156" y1="184" x2="184" y2="72"/>
   </g>
-  <!-- wordmark: Stream in ink, Suite in accent -->
   <text x="276" y="138"
         font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Menlo, Consolas, monospace"
         font-weight="700" font-size="92" letter-spacing="-4">

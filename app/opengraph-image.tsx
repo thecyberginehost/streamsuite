@@ -85,7 +85,7 @@ export default async function OG() {
             marginTop: 56,
           }}
         >
-          {/* mark — terminal brackets framing a sharp data pulse */}
+          {/* mark — terminal brackets framing :// (the URL scheme delimiter) */}
           <svg
             width="180"
             height="180"
@@ -98,7 +98,10 @@ export default async function OG() {
           >
             <path d="M 62 52 L 36 52 L 36 204 L 62 204" />
             <path d="M 194 52 L 220 52 L 220 204 L 194 204" />
-            <path d="M 62 128 L 96 128 L 114 72 L 140 184 L 160 128 L 194 128" />
+            <circle cx="86" cy="100" r="12" fill={ACCENT} stroke="none" />
+            <circle cx="86" cy="156" r="12" fill={ACCENT} stroke="none" />
+            <line x1="120" y1="184" x2="148" y2="72" />
+            <line x1="156" y1="184" x2="184" y2="72" />
           </svg>
 
           {/* wordmark */}
