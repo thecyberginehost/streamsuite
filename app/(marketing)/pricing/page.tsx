@@ -233,13 +233,16 @@ function TierCard({
         {ctaLabel}
       </Link>
 
-      {/* Secondary crypto CTA — only when not blocked/current/already-subscribed */}
+      {/* Crypto status — "coming soon" while NOWPayments integration is in
+          final testing. Link still goes to /checkout/crypto/[tier] which now
+          serves a waitlist page (preserves the URL for inbound search +
+          early-interest capture). Re-enable as a live CTA once verified. */}
       {!isCurrentTier && !hasActiveSub && !showWaitlist && (
         <Link
           href={`/checkout/crypto/${t.id}`}
-          className="block w-full text-center mt-2 text-xs text-muted hover:text-ink underline-offset-2 hover:underline transition-colors"
+          className="block w-full text-center mt-2 text-[11px] text-muted/70 hover:text-muted underline-offset-2 hover:underline transition-colors"
         >
-          or pay with crypto →
+          crypto payment · coming soon →
         </Link>
       )}
     </div>
@@ -625,20 +628,23 @@ export default async function Pricing() {
                 Payment
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-3">
-                Card or crypto. Your call.
+                Card now. Crypto next.
               </h2>
               <p className="text-muted leading-relaxed">
-                Pay by credit card for automatic monthly billing, or pay one-time in
-                crypto on any major EVM chain. Card subscriptions auto-renew;
-                crypto is good for 30 days per payment with a renewal reminder
-                before expiry. Pick whichever chain has the lowest fees for
-                you &mdash; BSC at ~$0.20/tx is the usual answer.
+                Card billing live today &mdash; Visa, Mastercard, Amex via Stripe,
+                automatic monthly renewal, cancel anytime. Crypto checkout
+                (one-time 30-day windows on major EVM chains) is in final
+                testing &mdash;{' '}
+                <Link href="/checkout/crypto/realtime" className="text-accent hover:text-accent-bright underline-offset-2 hover:underline">
+                  join the crypto waitlist
+                </Link>{' '}
+                and we&apos;ll email when it goes live (target: next 2 weeks).
               </p>
             </div>
             <div className="grid gap-5">
               <div>
                 <div className="text-xs font-mono uppercase tracking-wider text-muted mb-2">
-                  Card payments
+                  Card payments &middot; <span className="text-accent">live</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1.5 rounded-md font-mono text-sm bg-panel-2 border border-border text-ink">
@@ -654,13 +660,13 @@ export default async function Pricing() {
               </div>
               <div>
                 <div className="text-xs font-mono uppercase tracking-wider text-muted mb-2">
-                  Crypto tokens
+                  Crypto tokens &middot; <span className="text-amber-400/80">coming soon</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {paymentTokens.map((t) => (
                     <span
                       key={t}
-                      className="px-3 py-1.5 rounded-md font-mono text-sm bg-panel-2 border border-border text-ink"
+                      className="px-3 py-1.5 rounded-md font-mono text-sm bg-panel-2 border border-border/60 text-muted"
                     >
                       {t}
                     </span>
@@ -669,13 +675,13 @@ export default async function Pricing() {
               </div>
               <div>
                 <div className="text-xs font-mono uppercase tracking-wider text-muted mb-2">
-                  Crypto chains
+                  Crypto chains &middot; <span className="text-amber-400/80">coming soon</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {paymentChains.map((c) => (
                     <span
                       key={c}
-                      className="px-3 py-1.5 rounded-md font-mono text-sm bg-panel-2 border border-border text-ink"
+                      className="px-3 py-1.5 rounded-md font-mono text-sm bg-panel-2 border border-border/60 text-muted"
                     >
                       {c}
                     </span>

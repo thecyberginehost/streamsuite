@@ -59,6 +59,11 @@ ${methodLines}
 - logs — filtered event logs (all tiers)
 - newPendingTransactions — pending tx hashes or full objects (Mempool / Full Node only)
 
+## Billing
+
+- Card (Stripe): live today. Visa / Mastercard / Amex. Auto-renew monthly. Cancel anytime.
+- Crypto (NOWPayments): coming soon. USDC / USDT / ETH / BNB on Ethereum / BSC / Base / Arbitrum / Optimism. Integration in final testing — waitlist at ${BASE}/checkout/crypto/realtime.
+
 ## Other
 
 - [Pricing](${BASE}/pricing)

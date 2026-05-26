@@ -219,17 +219,23 @@ export function DashboardClient({
             <Row label="Status" value={status.toUpperCase()} valueClass="text-accent-bright" />
           </div>
 
-          {/* Crypto renewal CTA — only crypto-paid customers can / should renew via crypto */}
+          {/* Crypto renewal — held while NOWPayments integration is in final
+              testing. Existing crypto-paid customers see a "contact us to renew"
+              note instead of a live CTA, so we manually extend access until the
+              crypto checkout is verified safe. Re-enable the Link below once
+              /api/checkout/crypto is back to creating real invoices. */}
           {hasCryptoAccess && (
-            <div className="mb-4">
-              <Link
-                href={`/checkout/crypto/${tier}`}
-                className="btn-ghost !py-2 !px-3 text-xs font-mono uppercase tracking-wider w-full inline-flex items-center justify-center"
-              >
-                Renew with crypto →
-              </Link>
-              <p className="text-xs font-mono text-muted mt-2 leading-relaxed">
-                One-time payment extends your access by another 30 days. No auto-renewal.
+            <div className="mb-4 p-3 border border-amber-500/30 bg-amber-500/[0.04] rounded">
+              <p className="text-xs font-mono text-amber-300/90 leading-relaxed mb-1">
+                ⚠ Crypto renewal in development
+              </p>
+              <p className="text-xs font-mono text-muted leading-relaxed">
+                Your crypto access is valid through the date above. The renewal
+                flow is in final testing &mdash;{' '}
+                <a href="mailto:support@streamsuite.io?subject=Crypto%20renewal" className="text-accent hover:underline">
+                  email support
+                </a>{' '}
+                and we&apos;ll extend your access manually until the new flow is live.
               </p>
             </div>
           )}
