@@ -17,10 +17,31 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-bg/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
-          <span className="w-7 h-7 rounded-md border border-accent/40 flex items-center justify-center">
-            <span className="w-2.5 h-2.5 rounded-sm bg-accent shadow-glow group-hover:bg-accent-bright transition-colors" />
-          </span>
+        <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setOpen(false)}>
+          {/* StreamSuite mark — 3 stream lines + cursor dots inside a
+              terminal-window frame. currentColor so it tints with the
+              link colour; mark + wordmark brighten together on hover. */}
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 256 256"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="14"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-accent group-hover:text-accent-bright transition-colors shrink-0"
+            aria-hidden
+          >
+            <rect x="28" y="36" width="200" height="184" rx="22" ry="22" />
+            <line x1="28" y1="72" x2="228" y2="72" />
+            <line x1="56" y1="112" x2="172" y2="112" />
+            <line x1="56" y1="148" x2="148" y2="148" />
+            <line x1="56" y1="184" x2="124" y2="184" />
+            <circle cx="190" cy="112" r="11" fill="currentColor" stroke="none" />
+            <circle cx="166" cy="148" r="11" fill="currentColor" stroke="none" />
+            <circle cx="142" cy="184" r="11" fill="currentColor" stroke="none" />
+          </svg>
           <span className="font-semibold tracking-tight text-ink">StreamSuite</span>
           <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-wider text-accent/70 border border-accent/20 rounded px-1.5 py-0.5 ml-1">
             Dedicated

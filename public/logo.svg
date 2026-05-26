@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 200" role="img" aria-label="StreamSuite">
+  <title>StreamSuite</title>
+  <!-- mark on the left, currentColor so callers can re-tint -->
+  <g fill="none" stroke="#34d399" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="28" y="36" width="200" height="184" rx="22" ry="22" transform="translate(0,-18)" />
+    <line x1="28" y1="72" x2="228" y2="72" transform="translate(0,-18)" />
+    <line x1="56"  y1="112" x2="172" y2="112" transform="translate(0,-18)" />
+    <line x1="56"  y1="148" x2="148" y2="148" transform="translate(0,-18)" />
+    <line x1="56"  y1="184" x2="124" y2="184" transform="translate(0,-18)" />
+    <circle cx="190" cy="112" r="11" fill="#34d399" stroke-width="0" transform="translate(0,-18)" />
+    <circle cx="166" cy="148" r="11" fill="#34d399" stroke-width="0" transform="translate(0,-18)" />
+    <circle cx="142" cy="184" r="11" fill="#34d399" stroke-width="0" transform="translate(0,-18)" />
+  </g>
+  <!-- wordmark: "Stream" in ink, "Suite" in accent green -->
+  <text x="276" y="138"
+        font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Menlo, Consolas, monospace"
+        font-weight="700" font-size="92" letter-spacing="-4">
+    <tspan fill="#e5e9f0">Stream</tspan><tspan fill="#34d399">Suite</tspan>
+  </text>
+</svg>

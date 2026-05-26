@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="StreamSuite mark" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+  <title>StreamSuite</title>
+  <rect x="28" y="36" width="200" height="184" rx="22" ry="22" />
+  <line x1="28" y1="72" x2="228" y2="72" />
+  <line x1="56"  y1="112" x2="172" y2="112" />
+  <line x1="56"  y1="148" x2="148" y2="148" />
+  <line x1="56"  y1="184" x2="124" y2="184" />
+  <circle cx="190" cy="112" r="11" fill="currentColor" stroke-width="0" />
+  <circle cx="166" cy="148" r="11" fill="currentColor" stroke-width="0" />
+  <circle cx="142" cy="184" r="11" fill="currentColor" stroke-width="0" />
+</svg>

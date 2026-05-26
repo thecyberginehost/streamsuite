@@ -26,6 +26,12 @@ export const metadata: Metadata = {
     'pendingTransactions subscription',
     'trading bot node',
   ],
+  // icons.icon points at /public/favicon.svg (the brand mark). For the
+  // 1200×630 link-preview card and the iOS home-screen icon, see:
+  //   app/opengraph-image.tsx — Next auto-injects as <meta property="og:image">
+  //   app/twitter-image.tsx   — Next auto-injects as <meta name="twitter:image">
+  //   app/apple-icon.tsx      — Next auto-injects as <link rel="apple-touch-icon">
+  // Don't also add `openGraph.images` here — it'd duplicate the meta tags.
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
   },
